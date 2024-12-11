@@ -1,7 +1,7 @@
 bevy_support_misc
 =================
 
-My common code shared between projects.
+Common code shared between my projects.
 
 Quickstart
 ----------
@@ -17,6 +17,7 @@ Please see [LICENSE](./LICENSE).
 Compatible Bevy Versions
 ------------------------
 
-| bevy | bevy_support_misc            |
-|------|------------------------------|
-| 0.14 | 0.0.1-0.1.0, branch `master` |
+| bevy | bevy_support_misc      |
+|------|------------------------|
+| 0.15 | 0.2.0, branch `master` |
+| 0.14 | 0.1.0                  |

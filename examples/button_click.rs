@@ -1,6 +1,6 @@
 use bevy::color::palettes::tailwind::GRAY_400;
 use bevy::prelude::*;
-use bevy_support::ui::{ButtonState, UiSupportPlugin};
+use bevy_support_misc::ui::{PressEffect, UiSupportPlugin};
 
 fn main() {
     App::new()
@@ -15,7 +15,7 @@ fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 
     commands.spawn((
-        ButtonState::default(),
+        PressEffect::default(),
         ButtonBundle {
             style: Style {
                 width: Val::Px(150.),
