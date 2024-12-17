@@ -5,8 +5,8 @@
 
 use bevy::prelude::{Component, Query, Visibility, With};
 
-pub mod ui;
 pub mod transform;
+pub mod ui;
 
 pub fn show_ui<T>(mut mainmenu: Query<&mut Visibility, With<T>>)
 where
