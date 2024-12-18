@@ -28,21 +28,29 @@ fn moving_2d(time: Res<Time>, mut query: Query<(&mut Transform, &mut Movement)>)
         let x2x1 = next_stop.x - transform.translation.x;
         let y2y1 = next_stop.y - transform.translation.y;
         let d = (x2x1.powi(2) + y2y1.powi(2)).sqrt();
-        let move_x = x2x1 / d * v;
-        let move_y = y2y1 / d * v;
 
-        if move_x.abs() >= x2x1.abs() {
-            transform.translation.x = next_stop.x;
-            arrived_x = true;
-        } else {
-            transform.translation.x += move_x;
+        if d * v != 0. {
+            let move_x = x2x1 / d * v;
+            let move_y = y2y1 / d * v;
+
+            if move_x.abs() >= x2x1.abs() {
+                transform.translation.x = next_stop.x;
+                arrived_x = true;
+            } else {
+                transform.translation.x += move_x;
+            }
+
+            if move_y.abs() >= y2y1.abs() {
+                transform.translation.y = next_stop.y;
+                arrived_y = true;
+            } else {
+                transform.translation.y += move_y;
+            }
         }
 
-        if move_y.abs() >= y2y1.abs() {
-            transform.translation.y = next_stop.y;
+        if x2x1 == 0. && y2y1 == 0. {
+            arrived_x = true;
             arrived_y = true;
-        } else {
-            transform.translation.y += move_y;
         }
 
         if arrived_x && arrived_y {
