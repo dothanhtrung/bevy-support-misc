@@ -9,10 +9,22 @@ impl Plugin for TransformSupportPlugin {
     }
 }
 
+#[derive(Default)]
+pub struct Destination {
+    pub pos: Vec3,
+    pub custom_velocity: Option<f32>,
+}
+
+impl Destination {
+    pub fn from_pos(pos: Vec3) -> Self {
+        Self { pos, ..Self::default() }
+    }
+}
+
 #[derive(Component, Default)]
 pub struct Movement {
     pub velocity: f32,
-    pub des: Vec<Vec3>,
+    pub des: Vec<Destination>,
 }
 
 fn moving_2d(time: Res<Time>, mut query: Query<(&mut Transform, &mut Movement)>) {
@@ -20,11 +32,17 @@ fn moving_2d(time: Res<Time>, mut query: Query<(&mut Transform, &mut Movement)>)
         if movement.des.is_empty() {
             continue;
         }
+        let des = movement.des.first().unwrap();
+        let velocity = if let Some(custom_v) = des.custom_velocity {
+            custom_v
+        } else {
+            movement.velocity
+        };
 
         let mut arrived_x = false;
         let mut arrived_y = false;
-        let v = movement.velocity * (time.delta().as_millis() as f32);
-        let next_stop = movement.des.first().unwrap();
+        let v = velocity * (time.delta().as_millis() as f32);
+        let next_stop = movement.des.first().unwrap().pos;
         let x2x1 = next_stop.x - transform.translation.x;
         let y2y1 = next_stop.y - transform.translation.y;
         let d = (x2x1.powi(2) + y2y1.powi(2)).sqrt();
