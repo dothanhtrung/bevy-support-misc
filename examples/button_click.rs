@@ -12,18 +12,16 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2d::default());
 
     commands.spawn((
         PressEffect::default(),
-        ButtonBundle {
-            style: Style {
-                width: Val::Px(150.),
-                height: Val::Px(50.),
-                ..default()
-            },
-            background_color: GRAY_400.into(),
+        Button,
+        Node {
+            width: Val::Px(150.),
+            height: Val::Px(50.),
             ..default()
         },
+        BackgroundColor(GRAY_400.into()),
     ));
 }
