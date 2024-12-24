@@ -16,3 +16,6 @@ bevy = { version = "0.15", features = ["bevy_ui"], default-features = false }
 [dev-dependencies]
 bevy = { version = "0.15" }
 
+[features]
+default = []
+3d = []
