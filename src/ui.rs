@@ -5,18 +5,15 @@ pub mod button;
 use crate::ui::button::GameButtonPlugin;
 use bevy::prelude::With;
 use bevy::{
-    app::{App, Plugin, Update}
-    ,
-    prelude::{Component, Query, Text2d, Transform}
-    ,
+    app::{App, Plugin, Update},
+    prelude::{Component, Query, Text2d, Transform},
 };
 
 pub struct UiSupportPlugin;
 
 impl Plugin for UiSupportPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(GameButtonPlugin)
-            .add_systems(Update, (update_debug_info));
+        app.add_plugins(GameButtonPlugin).add_systems(Update, update_debug_info);
     }
 }
 
