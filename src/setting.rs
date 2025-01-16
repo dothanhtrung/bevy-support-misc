@@ -1,9 +1,60 @@
+use bevy::app::App;
 use bevy::asset::ron::de::from_reader;
 use bevy::asset::ron::ser::{to_string_pretty, PrettyConfig};
+use bevy::prelude::{on_event, warn, Event, IntoSystemConfigs, Plugin, Res, ResMut, Resource, Startup, Update};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
+
+pub struct GameSettingPlugin<T>
+where
+    T: Resource + Default + GameSetting + Clone,
+{
+    config: T,
+}
+
+impl<T> Plugin for GameSettingPlugin<T>
+where
+    T: Resource + Default + GameSetting + Clone,
+{
+    fn build(&self, app: &mut App) {
+        app.insert_resource(self.config.clone())
+            .add_event::<GameSettingChanged>()
+            .add_systems(Startup, load_config::<T>)
+            .add_systems(Update, save_config::<T>.run_if(on_event::<GameSettingChanged>));
+    }
+}
+
+impl<T> GameSettingPlugin<T>
+where
+    T: Resource + Default + GameSetting + Clone,
+{
+    pub fn new(config: T) -> Self {
+        Self { config }
+    }
+}
+
+#[derive(Event)]
+pub struct GameSettingChanged;
+
+fn load_config<T>(mut config: ResMut<T>)
+where
+    T: Resource + GameSetting,
+{
+    if let Err(e) = config.load() {
+        warn!("Failed to load game config: {}", e);
+    }
+}
+
+fn save_config<T>(config: Res<T>)
+where
+    T: Resource + GameSetting,
+{
+    if let Err(e) = config.save() {
+        warn!("Failed to save game config: {}", e);
+    }
+}
 
 pub trait GameSetting: Serialize + for<'de> Deserialize<'de> {
     const DEFAULT_CONF: &'static str = "game_setting.conf";
