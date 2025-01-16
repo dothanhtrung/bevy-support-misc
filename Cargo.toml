@@ -12,6 +12,7 @@ categories = ["game-development"]
 
 [dependencies]
 bevy = { version = "0.15", features = ["bevy_ui", "bevy_color"], default-features = false }
+serde = "1.0"
 anyhow = "1.0"
 
 [dev-dependencies]
