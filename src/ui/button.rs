@@ -52,13 +52,13 @@ pub fn btn_effect(
         match interaction {
             Interaction::Pressed => {
                 effect.in_effect = true;
-                transform.scale *= effect.scale;
-                transform.translation += effect.translation;
+                transform.scale = effect.orig_scale * effect.scale;
+                transform.translation = effect.orig_translation + effect.translation;
             }
             Interaction::Hovered => {
                 effect.in_effect = true;
                 transform.scale = effect.orig_scale;
-                bg_color.0 = bg_color.0.lighter(effect.lighter);
+                bg_color.0 = effect.orig_color.lighter(effect.lighter);
             }
             Interaction::None => {
                 if effect.in_effect {
