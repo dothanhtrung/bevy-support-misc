@@ -5,6 +5,7 @@
 
 use bevy::prelude::{Component, Query, Visibility, With};
 
+pub mod save;
 pub mod setting;
 pub mod transform;
 pub mod ui;

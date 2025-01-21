@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
+use bevy::tasks::IoTaskPool;
 
 pub struct GameSettingPlugin<T>
 where
@@ -72,17 +73,24 @@ pub trait GameSetting: Serialize + for<'de> Deserialize<'de> {
 
     fn save(&self) -> anyhow::Result<()> {
         let config_path = PathBuf::from(Self::DEFAULT_CONF);
-        self.save_to(&config_path)
+        self.save_to(config_path)
     }
 
-    fn save_to(&self, config_path: &PathBuf) -> anyhow::Result<()> {
+    fn save_to(&self, config_path: PathBuf) -> anyhow::Result<()> {
         let pretty = PrettyConfig::default();
         let ron_str = to_string_pretty(self, pretty)?;
 
-        if let Some(parent_dir) = config_path.parent() {
-            std::fs::create_dir_all(parent_dir)?;
-        }
-        let mut file = File::create(config_path)?;
-        file.write_all(ron_str.as_bytes()).map_err(|e| anyhow::anyhow!(e))
+        #[cfg(not(target_arch = "wasm32"))]
+        IoTaskPool::get()
+            .spawn(async move {
+                if let Some(parent_dir) = config_path.parent() {
+                    std::fs::create_dir_all(parent_dir)?;
+                }
+                let mut file = File::create(config_path)?;
+                file.write_all(ron_str.as_bytes()).map_err(|e| anyhow::anyhow!(e))
+            })
+            .detach();
+
+        Ok(())
     }
 }
