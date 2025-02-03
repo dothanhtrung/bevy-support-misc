@@ -9,6 +9,7 @@ pub mod save;
 pub mod setting;
 pub mod transform;
 pub mod ui;
+pub mod easing;
 
 pub fn show_ui<T>(mut mainmenu: Query<&mut Visibility, With<T>>)
 where
