@@ -1,6 +1,6 @@
 use bevy::color::palettes::tailwind::GREEN_400;
 use bevy::prelude::*;
-use bevy_support_misc::ui::button::ButtonEffect;
+use bevy_support_misc::ui::button::{ButtonLighterEffect, ButtonTransformEffect};
 use bevy_support_misc::ui::UiSupportPlugin;
 
 fn main() {
@@ -13,10 +13,11 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2d::default());
+    commands.spawn(Camera2d);
 
     commands.spawn((
-        ButtonEffect::default(),
+        ButtonTransformEffect::default(),
+        ButtonLighterEffect::default(),
         Button,
         Node {
             width: Val::Px(150.),
