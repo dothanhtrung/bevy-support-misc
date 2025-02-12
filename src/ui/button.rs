@@ -1,29 +1,28 @@
 use bevy::app::App;
 use bevy::math::Vec3;
-use bevy::prelude::{Changed, Color, Component, Font, Handle, Interaction, Luminance, Plugin, Query, Transform, Update};
+use bevy::prelude::{
+    Changed, Color, Component, Interaction, IntoSystemConfigs, Luminance, Plugin, Query, Text, Transform, Update,
+};
 use bevy::ui::BackgroundColor;
 
 pub struct GameButtonPlugin;
 
 impl Plugin for GameButtonPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (btn_transform_effect, btn_lighter_effect));
+        app.add_systems(
+            Update,
+            (btn_transform_effect, btn_toggle_effect, btn_color_effect).chain(),
+        );
     }
 }
 
 #[derive(Component)]
+#[require(Interaction, Transform)]
 pub struct ButtonTransformEffect {
     pub scale: Vec3,
     pub translation: Vec3,
     orig_scale: Vec3,
     orig_translation: Vec3,
-    in_effect: bool,
-}
-
-#[derive(Component)]
-pub struct ButtonLighterEffect {
-    pub lighter: f32,
-    orig_color: Color,
     in_effect: bool,
 }
 
@@ -39,7 +38,15 @@ impl Default for ButtonTransformEffect {
     }
 }
 
-impl Default for ButtonLighterEffect {
+#[derive(Component)]
+#[require(Interaction, BackgroundColor)]
+pub struct ButtonColorEffect {
+    pub lighter: f32,
+    orig_color: Color,
+    in_effect: bool,
+}
+
+impl Default for ButtonColorEffect {
     fn default() -> Self {
         Self {
             lighter: 0.1,
@@ -49,16 +56,29 @@ impl Default for ButtonLighterEffect {
     }
 }
 
-pub struct ButtonStyle {
-    // Color when pressed
-    pub active_bg: Color,
-    pub inactive_bg: Color,
-    pub bg: Color,
-    pub text_color: Color,
-    pub font: Handle<Font>,
+#[derive(Component)]
+#[require(BackgroundColor, Text, Interaction)]
+pub struct ButtonToggleEffect {
+    pub on_text: String,
+    pub off_text: String,
+    pub on_color: Color,
+    pub off_color: Color,
+    pub enabled: bool,
 }
 
-pub fn btn_transform_effect(
+impl Default for ButtonToggleEffect {
+    fn default() -> Self {
+        Self {
+            on_text: String::from("On"),
+            off_text: String::from("Off"),
+            on_color: Color::NONE,
+            off_color: Color::NONE,
+            enabled: false,
+        }
+    }
+}
+
+fn btn_transform_effect(
     mut query: Query<(&mut Transform, &mut ButtonTransformEffect, &Interaction), Changed<Interaction>>,
 ) {
     for (mut transform, mut effect, interaction) in query.iter_mut() {
@@ -84,8 +104,8 @@ pub fn btn_transform_effect(
     }
 }
 
-pub fn btn_lighter_effect(
-    mut query: Query<(&mut BackgroundColor, &mut ButtonLighterEffect, &Interaction), Changed<Interaction>>,
+fn btn_color_effect(
+    mut query: Query<(&mut BackgroundColor, &mut ButtonColorEffect, &Interaction), Changed<Interaction>>,
 ) {
     for (mut bg_color, mut effect, interaction) in query.iter_mut() {
         match interaction {
@@ -101,6 +121,38 @@ pub fn btn_lighter_effect(
                 }
                 effect.orig_color = bg_color.0;
             }
+        }
+    }
+}
+
+fn btn_toggle_effect(
+    mut query: Query<
+        (
+            &mut ButtonToggleEffect,
+            Option<&mut ButtonColorEffect>,
+            &mut Text,
+            &mut BackgroundColor,
+            &Interaction,
+        ),
+        Changed<Interaction>,
+    >,
+) {
+    for (mut btn_toggle_effect, btn_color_effect_opt, mut text, mut bg_color, interaction) in query.iter_mut() {
+        match interaction {
+            Interaction::Pressed => {
+                btn_toggle_effect.enabled = !btn_toggle_effect.enabled;
+                (**text, *bg_color) = if btn_toggle_effect.enabled {
+                    (btn_toggle_effect.on_text.clone(), btn_toggle_effect.on_color.into())
+                } else {
+                    (btn_toggle_effect.off_text.clone(), btn_toggle_effect.off_color.into())
+                };
+
+                if let Some(mut btn_color_effect) = btn_color_effect_opt {
+                    btn_color_effect.orig_color = bg_color.0;
+                }
+            }
+            Interaction::Hovered => {}
+            Interaction::None => {}
         }
     }
 }

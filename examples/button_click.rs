@@ -1,6 +1,6 @@
-use bevy::color::palettes::tailwind::GREEN_400;
+use bevy::color::palettes::tailwind::{GREEN_400, GREEN_800};
 use bevy::prelude::*;
-use bevy_support_misc::ui::button::{ButtonLighterEffect, ButtonTransformEffect};
+use bevy_support_misc::ui::button::{ButtonColorEffect, ButtonToggleEffect, ButtonTransformEffect};
 use bevy_support_misc::ui::UiSupportPlugin;
 
 fn main() {
@@ -17,7 +17,13 @@ fn setup(mut commands: Commands) {
 
     commands.spawn((
         ButtonTransformEffect::default(),
-        ButtonLighterEffect::default(),
+        ButtonColorEffect::default(),
+        ButtonToggleEffect{
+            on_color: GREEN_400.into(),
+            off_color: GREEN_800.into(),
+            enabled: true,
+            ..default()
+        },
         Button,
         Node {
             width: Val::Px(150.),
@@ -25,6 +31,6 @@ fn setup(mut commands: Commands) {
             ..default()
         },
         BackgroundColor(GREEN_400.into()),
-        Text::new("Button"),
+        Text::new("On"),
     ));
 }

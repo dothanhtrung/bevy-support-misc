@@ -3,7 +3,6 @@ pub mod popout;
 pub use popout::*;
 use bevy::app::App;
 use bevy::prelude::Plugin;
-use popout::PopoutSupportPlugin;
 
 pub struct EasingSupportPlugin;
 

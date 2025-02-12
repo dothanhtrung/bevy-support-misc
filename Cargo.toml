@@ -11,7 +11,7 @@ exclude = ["assets", "examples", "tests", ".cargo"]
 categories = ["game-development"]
 
 [dependencies]
-bevy = { version = "0.15", features = ["bevy_ui", "bevy_color"], default-features = false }
+bevy = { version = "0.15", features = ["bevy_ui", "bevy_color", "bevy_text"], default-features = false }
 serde = "1.0"
 bincode = "1.3"
 anyhow = "1.0"
