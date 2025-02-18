@@ -1,7 +1,6 @@
 use bevy::color::palettes::tailwind::GREEN_400;
 use bevy::prelude::*;
-use bevy_support_misc::easing::popout::PopoutEffect;
-use bevy_support_misc::easing::EasingSupportPlugin;
+use bevy_support_misc::easing::{EasingEffect, EasingSupportPlugin};
 
 fn main() {
     App::new()
@@ -34,16 +33,16 @@ fn setup(mut commands: Commands) {
 fn hover_in(trigger: Trigger<Pointer<Over>>, mut commands: Commands) {
     commands
         .entity(trigger.entity())
-        .insert(PopoutEffect::new(Vec3::splat(2.), 1000));
+        .insert(EasingEffect::popout(Vec3::splat(2.), 1000));
 }
 
 fn hover_out(
     trigger: Trigger<Pointer<Out>>,
     mut commands: Commands,
-    mut query: Query<(&mut Transform, &PopoutEffect)>,
+    mut query: Query<(&mut Transform, &EasingEffect)>,
 ) {
     if let Ok((mut transform, popout)) = query.get_mut(trigger.entity()) {
-        transform.scale = popout.orig_scale().unwrap_or(Vec3::splat(1.));
+        transform.scale = popout.orig_transform().unwrap_or_default().scale;
     }
-    commands.entity(trigger.entity()).remove::<PopoutEffect>();
+    commands.entity(trigger.entity()).remove::<EasingEffect>();
 }
