@@ -11,6 +11,7 @@ pub mod setting;
 pub mod transform;
 pub mod ui;
 pub mod color;
+pub mod timer;
 
 pub fn show_ui<T>(mut query: Query<&mut Visibility, With<T>>)
 where
