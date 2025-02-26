@@ -1,5 +1,5 @@
 use bevy::app::App;
-use bevy::prelude::{Commands, Component, Deref, DerefMut, Entity, Event, EventWriter, Plugin, Query, Res, Timer, Update};
+use bevy::prelude::{Commands, Component, Deref, DerefMut, Entity, Event, Plugin, Query, Res, Timer, Update};
 use bevy::time::Time;
 
 pub struct TimerSupportPlugin;

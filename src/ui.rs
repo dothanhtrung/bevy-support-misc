@@ -1,6 +1,7 @@
 // Copyright 2024 Trung Do <dothanhtrung@pm.me>
 
 pub mod button;
+pub mod number_input;
 
 use crate::ui::button::GameButtonPlugin;
 use bevy::prelude::With;
