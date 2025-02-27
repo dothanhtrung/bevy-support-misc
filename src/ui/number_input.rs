@@ -1,13 +1,17 @@
 use crate::ui::button::ButtonColorEffect;
-use bevy::prelude::{default, AlignItems, BuildChildren, Button, ChildBuild, ChildBuilder, Click, Color, Commands, Component, Deref, DerefMut, Entity, Event, JustifyContent, JustifyItems, JustifyText, Node, Parent, Pointer, Query, Text, TextColor, TextFont, TextLayout, Trigger, UiRect, Val};
+use bevy::prelude::{
+    default, AlignItems, BuildChildren, Button, ChildBuild, ChildBuilder, Click, Color, Commands, Component, Deref,
+    DerefMut, Entity, Event, JustifyContent, JustifyItems, JustifyText, Node, Parent, Pointer, Query, Text, TextColor,
+    TextFont, TextLayout, Trigger, UiRect, Val,
+};
 use bevy::ui::{AlignContent, BackgroundColor, FlexDirection};
 use bevy_text_edit::{TextEditable, TextEdited};
 use std::cmp::{max, min};
 
 #[derive(Component)]
 struct NumberInput {
-    max: i32,
-    min: i32,
+    max: i64,
+    min: i64,
 }
 
 #[derive(Component, Deref, DerefMut)]
@@ -16,8 +20,8 @@ struct NumberButton(Option<Entity>);
 
 #[derive(Default)]
 pub struct NumberInputSetting {
-    pub min: i32,
-    pub max: i32,
+    pub min: i64,
+    pub max: i64,
     pub text_bg: Color,
     pub btn_bg: Color,
     pub text_font: TextFont,
@@ -27,9 +31,9 @@ pub struct NumberInputSetting {
 }
 
 #[derive(Event, Deref, DerefMut)]
-pub struct NumberInputChanged(pub i32);
+pub struct NumberInputChanged(pub i64);
 
-pub fn spawn_number_input_text(builder: &mut ChildBuilder, number: i32, setting: NumberInputSetting) -> Entity {
+pub fn spawn_number_input_text(builder: &mut ChildBuilder, number: i64, setting: NumberInputSetting) -> Entity {
     builder
         .spawn(Node {
             flex_direction: FlexDirection::Row,
@@ -57,6 +61,7 @@ pub fn spawn_number_input_text(builder: &mut ChildBuilder, number: i32, setting:
                     BackgroundColor::from(setting.text_bg),
                 ))
                 .with_children(|builder| {
+                    let max_length = max(setting.max.to_string().len(), setting.min.to_string().len());
                     id = Some(
                         builder
                             .spawn((
@@ -68,6 +73,7 @@ pub fn spawn_number_input_text(builder: &mut ChildBuilder, number: i32, setting:
                                 Text::new(number.to_string()),
                                 TextEditable {
                                     filter_in: vec!["[0-9.-]".to_string()],
+                                    max_length,
                                     ..default()
                                 },
                                 TextColor::from(setting.text_color),
@@ -141,11 +147,11 @@ fn change_value(
     let e = trigger.entity();
     let edited_text = trigger.text.clone();
     if let Ok((mut text, setting)) = query.get_mut(e) {
-        if let Ok(num) = edited_text.parse::<i32>() {
+        if let Ok(num) = edited_text.parse::<i64>() {
             let new_num = max(min(setting.max, num), setting.min);
             **text = new_num.to_string();
 
-            notify(commands, parent_query, e, new_num);
+            number_input_notify(commands, parent_query, e, new_num);
         }
     }
 }
@@ -159,11 +165,11 @@ fn increase(
 ) {
     if let Ok(NumberButton(Some(e))) = button_query.get(trigger.entity()) {
         if let Ok((mut text, setting)) = text_query.get_mut(*e) {
-            if let Ok(num) = text.parse::<i32>() {
+            if let Ok(num) = text.parse::<i64>() {
                 let new_num = min(setting.max, num + 1);
                 **text = new_num.to_string();
 
-                notify(commands, parent_query, *e, new_num);
+                number_input_notify(commands, parent_query, *e, new_num);
             }
         }
     }
@@ -178,17 +184,17 @@ fn reduce(
 ) {
     if let Ok(NumberButton(Some(e))) = button_query.get(trigger.entity()) {
         if let Ok((mut text, setting)) = text_query.get_mut(*e) {
-            if let Ok(num) = text.parse::<i32>() {
+            if let Ok(num) = text.parse::<i64>() {
                 let new_num = max(setting.min, num - 1);
                 **text = new_num.to_string();
 
-                notify(commands, parent_query, *e, new_num);
+                number_input_notify(commands, parent_query, *e, new_num);
             }
         }
     }
 }
 
-fn notify(mut commands: Commands, parent_query: Query<&Parent>, e: Entity, new_num: i32) {
+fn number_input_notify(mut commands: Commands, parent_query: Query<&Parent>, e: Entity, new_num: i64) {
     if let Ok(parent) = parent_query.get(e) {
         if let Ok(grand_parent) = parent_query.get(**parent) {
             commands.trigger_targets(NumberInputChanged(new_num), **grand_parent);
