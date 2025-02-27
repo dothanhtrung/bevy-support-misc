@@ -8,14 +8,14 @@ use std::io::Write;
 use std::path::PathBuf;
 use bevy::tasks::IoTaskPool;
 
-pub struct GameSettingPlugin<T>
+pub struct GameSettingSupportPlugin<T>
 where
     T: Resource + Default + GameSetting + Clone,
 {
     config: T,
 }
 
-impl<T> Plugin for GameSettingPlugin<T>
+impl<T> Plugin for GameSettingSupportPlugin<T>
 where
     T: Resource + Default + GameSetting + Clone,
 {
@@ -27,7 +27,7 @@ where
     }
 }
 
-impl<T> GameSettingPlugin<T>
+impl<T> GameSettingSupportPlugin<T>
 where
     T: Resource + Default + GameSetting + Clone,
 {
