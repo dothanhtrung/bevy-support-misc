@@ -57,7 +57,7 @@ where
 }
 
 pub trait EncryptSave: Serialize + for<'de> Deserialize<'de> {
-    const DEFAULT_SAVE: &'static str = "default_save.conf";
+    const DEFAULT_SAVE: &'static str = "default_save.dat";
     const ENCR_KEY: &'static str = "0123456789abcdef";
 
     fn load(&mut self) -> anyhow::Result<()> {
