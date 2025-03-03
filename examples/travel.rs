@@ -1,7 +1,8 @@
 use bevy::asset::RenderAssetUsages;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
-use bevy_support_misc::transform::{Destination, Movement, TransformSupportPlugin};
+use bevy_support_misc::transform::TransformSupportPlugin;
+use bevy_support_misc::transform::movement::{Destination, Movement};
 
 fn main() {
     App::new()

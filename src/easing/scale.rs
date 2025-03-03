@@ -1,8 +1,8 @@
 use bevy::app::{App, Update};
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default, Component, Curve, Deref, DerefMut, EaseFunction, EasingCurve, Entity, Event, EventWriter, Plugin, Query,
-    Res, Time, Transform,
+    default, Commands, Component, Curve, Deref, DerefMut, EaseFunction, EasingCurve, Entity, Event, EventWriter,
+    Plugin, Query, Res, Time, Transform,
 };
 
 pub struct ScaleEasingPlugin;
@@ -58,6 +58,7 @@ impl ScaleEasingEffect {
 }
 
 fn easing(
+    mut commands: Commands,
     mut query: Query<(&mut Transform, &mut ScaleEasingEffect, Entity)>,
     mut event: EventWriter<ScaleEasingEnded>,
     time: Res<Time>,
@@ -86,6 +87,7 @@ fn easing(
 
         if percent >= 1. {
             event.send(ScaleEasingEnded(entity));
+            commands.trigger_targets(ScaleEasingEnded(entity), entity);
         }
     }
 }

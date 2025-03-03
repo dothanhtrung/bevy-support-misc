@@ -16,6 +16,12 @@ pub struct AutoTimer(pub Timer);
 #[derive(Event)]
 pub struct AutoTimerFinished;
 
+impl AutoTimer {
+    pub fn progress(&self) -> f32 {
+        self.0.elapsed().as_secs_f32() / self.0.duration().as_secs_f32()
+    }
+}
+
 fn auto_tick(mut commands: Commands, time: Res<Time>, mut query: Query<(&mut AutoTimer, Entity)>) {
     for (mut timer, e) in query.iter_mut() {
         if !timer.paused() {

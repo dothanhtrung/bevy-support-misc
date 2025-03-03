@@ -1,0 +1,63 @@
+use bevy::app::{App, Plugin, Update};
+use bevy::prelude::{Alpha, Commands, Component, DespawnRecursiveExt, Entity, Query, Timer};
+use bevy::text::TextColor;
+use bevy::ui::BackgroundColor;
+use crate::timer::AutoTimer;
+
+pub struct FadingSupportPlugin;
+
+impl Plugin for FadingSupportPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, fading);
+    }
+}
+
+pub enum Fade {
+    In,
+    Out,
+}
+
+#[derive(Component)]
+pub struct FadeSupport {
+    timer: AutoTimer,
+    fade: Fade,
+    despawn_on_finish: bool,
+}
+
+impl FadeSupport {
+    pub fn new(timer: Timer, fade: Fade, despawn_on_finish: bool) -> Self {
+        Self {
+            timer: AutoTimer(timer),
+            fade,
+            despawn_on_finish,
+        }
+    }
+}
+
+fn fading(
+    mut commands: Commands,
+    mut query: Query<(
+        Option<&mut BackgroundColor>,
+        Option<&mut TextColor>,
+        &FadeSupport,
+        Entity,
+    )>,
+) {
+    for (background_color, text_color, fading, entity) in query.iter_mut() {
+        let progress = fading.timer.progress();
+        let alpha = match fading.fade {
+            Fade::In => progress,
+            Fade::Out => 1.0 - progress,
+        };
+        if let Some(mut bg) = background_color {
+            bg.0.set_alpha(alpha);
+        }
+        if let Some(mut text) = text_color {
+            text.0.set_alpha(alpha);
+        }
+
+        if fading.despawn_on_finish && progress >= 1.0 {
+            commands.entity(entity).despawn_recursive();
+        }
+    }
+}
