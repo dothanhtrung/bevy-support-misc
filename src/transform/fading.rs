@@ -1,8 +1,8 @@
+use crate::timer::AutoTimer;
 use bevy::app::{App, Plugin, Update};
-use bevy::prelude::{Alpha, Commands, Component, DespawnRecursiveExt, Entity, Query, Timer};
+use bevy::prelude::{Alpha, Commands, Component, DespawnRecursiveExt, Entity, Query, Res, Sprite, Time, Timer};
 use bevy::text::TextColor;
 use bevy::ui::BackgroundColor;
-use crate::timer::AutoTimer;
 
 pub struct FadingSupportPlugin;
 
@@ -39,12 +39,16 @@ fn fading(
     mut query: Query<(
         Option<&mut BackgroundColor>,
         Option<&mut TextColor>,
-        &FadeSupport,
+        Option<&mut Sprite>,
+        &mut FadeSupport,
         Entity,
     )>,
+    time: Res<Time>,
 ) {
-    for (background_color, text_color, fading, entity) in query.iter_mut() {
+    for (background_color, text_color, sprite, mut fading, entity) in query.iter_mut() {
+        fading.timer.tick(time.delta());
         let progress = fading.timer.progress();
+
         let alpha = match fading.fade {
             Fade::In => progress,
             Fade::Out => 1.0 - progress,
@@ -54,6 +58,10 @@ fn fading(
         }
         if let Some(mut text) = text_color {
             text.0.set_alpha(alpha);
+        }
+        
+        if let Some(mut spr) = sprite {
+            spr.color.set_alpha(alpha);
         }
 
         if fading.despawn_on_finish && progress >= 1.0 {
