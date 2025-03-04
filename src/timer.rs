@@ -10,7 +10,7 @@ impl Plugin for TimerSupportPlugin {
     }
 }
 
-#[derive(Component, Deref, DerefMut)]
+#[derive(Component, Deref, DerefMut, Default)]
 pub struct AutoTimer(pub Timer);
 
 #[derive(Event)]

@@ -12,12 +12,14 @@ impl Plugin for FadingSupportPlugin {
     }
 }
 
+#[derive(Default)]
 pub enum Fade {
+    #[default]
     In,
     Out,
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct FadeSupport {
     timer: AutoTimer,
     fade: Fade,

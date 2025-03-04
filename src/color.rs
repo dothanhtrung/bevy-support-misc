@@ -1,6 +1,6 @@
 use bevy::prelude::{Color, Deref, DerefMut};
 
-#[derive(Deref, DerefMut)]
+#[derive(Deref, DerefMut, Default)]
 pub struct HexColor(pub u32);
 
 impl Into<Color> for HexColor {
