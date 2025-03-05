@@ -37,6 +37,7 @@ fn setup(
                 Destination::from_pos(Vec3::new(-3., 3., -2.)),
                 Destination::from_pos(Vec3::new(2.3, -4., -1.)),
             ],
+            ..default()
         },
     ));
 

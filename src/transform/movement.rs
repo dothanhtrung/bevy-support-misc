@@ -1,6 +1,6 @@
 use bevy::app::{App, Update};
 use bevy::math::Vec3;
-use bevy::prelude::{Component, Plugin, Query, Res, Time, Transform};
+use bevy::prelude::{Commands, Component, Entity, Event, Plugin, Query, Res, Time, Transform};
 
 pub struct MovementSupportPlugin;
 
@@ -27,11 +27,25 @@ pub struct Movement {
     pub velocity: f32,
     pub des: Vec<Destination>,
     pub circle: bool,
+    pub is_freezed: bool,
 }
 
-pub fn travel(time: Res<Time>, mut query: Query<(&mut Transform, &mut Movement)>) {
-    for (mut transform, mut movement) in query.iter_mut() {
-        if movement.des.is_empty() {
+impl Movement {
+    pub fn freeze(&mut self) {
+        self.is_freezed = true;
+    }
+
+    pub fn go(&mut self) {
+        self.is_freezed = false;
+    }
+}
+
+#[derive(Event)]
+pub struct Arrived;
+
+pub fn travel(mut commands: Commands, time: Res<Time>, mut query: Query<(&mut Transform, &mut Movement, Entity)>) {
+    for (mut transform, mut movement, e) in query.iter_mut() {
+        if movement.des.is_empty() || movement.is_freezed {
             continue;
         }
 
@@ -101,6 +115,7 @@ pub fn travel(time: Res<Time>, mut query: Query<(&mut Transform, &mut Movement)>
         let arrived = arrived_x && arrived_y;
 
         if arrived {
+            commands.trigger_targets(Arrived, e);
             if movement.circle {
                 let first_des = movement.as_ref().des.first().unwrap().clone();
                 movement.des.push(first_des);
