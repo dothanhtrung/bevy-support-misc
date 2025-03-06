@@ -35,6 +35,11 @@ impl FadeSupport {
             despawn_on_finish,
         }
     }
+
+    pub fn reset(&mut self) {
+        self.timer.reset();
+        self.timer.unpause();
+    }
 }
 
 fn fading(
@@ -50,6 +55,10 @@ fn fading(
     time: Res<Time>,
 ) {
     for (background_color, text_color, sprite, mut fading, mut visibility, entity) in query.iter_mut() {
+        if fading.timer.finished() {
+            return;
+        }
+
         fading.timer.tick(time.delta());
         let progress = fading.timer.progress();
 
