@@ -1,6 +1,6 @@
 use crate::timer::AutoTimer;
 use bevy::app::{App, Plugin, Update};
-use bevy::prelude::{Alpha, Commands, Component, DespawnRecursiveExt, Entity, Query, Res, Sprite, Time, Timer};
+use bevy::prelude::{Alpha, Commands, Visibility, Component, DespawnRecursiveExt, Entity, Query, Res, Sprite, Time, Timer};
 use bevy::text::TextColor;
 use bevy::ui::BackgroundColor;
 
@@ -20,6 +20,7 @@ pub enum Fade {
 }
 
 #[derive(Component, Default)]
+#[require(Visibility)]
 pub struct FadeSupport {
     timer: AutoTimer,
     fade: Fade,
@@ -43,16 +44,20 @@ fn fading(
         Option<&mut TextColor>,
         Option<&mut Sprite>,
         &mut FadeSupport,
+        &mut Visibility,
         Entity,
     )>,
     time: Res<Time>,
 ) {
-    for (background_color, text_color, sprite, mut fading, entity) in query.iter_mut() {
+    for (background_color, text_color, sprite, mut fading, mut visibility, entity) in query.iter_mut() {
         fading.timer.tick(time.delta());
         let progress = fading.timer.progress();
 
         let alpha = match fading.fade {
-            Fade::In => progress,
+            Fade::In => {
+                *visibility = Visibility::Visible;
+                progress
+            }
             Fade::Out => 1.0 - progress,
         };
         if let Some(mut bg) = background_color {
@@ -61,13 +66,17 @@ fn fading(
         if let Some(mut text) = text_color {
             text.0.set_alpha(alpha);
         }
-        
+
         if let Some(mut spr) = sprite {
             spr.color.set_alpha(alpha);
         }
 
-        if fading.despawn_on_finish && progress >= 1.0 {
-            commands.entity(entity).despawn_recursive();
+        if alpha <= 0. {
+            *visibility = Visibility::Hidden;
+
+            if fading.despawn_on_finish {
+                commands.entity(entity).despawn_recursive();
+            }
         }
     }
 }
