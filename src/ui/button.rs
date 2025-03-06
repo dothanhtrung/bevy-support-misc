@@ -1,7 +1,8 @@
 use bevy::app::App;
 use bevy::math::Vec3;
 use bevy::prelude::{
-    Changed, Color, Component, Interaction, IntoSystemConfigs, Luminance, Plugin, Query, Text, Transform, Update,
+    Changed, Color, Component, ImageNode, Interaction, IntoSystemConfigs, Luminance, Plugin, Query, Text, Transform,
+    Update,
 };
 use bevy::ui::BackgroundColor;
 
@@ -42,7 +43,8 @@ impl Default for ButtonTransformEffect {
 #[require(Interaction, BackgroundColor)]
 pub struct ButtonColorEffect {
     pub lighter: f32,
-    orig_color: Color,
+    orig_bg_color: Color,
+    orig_img_color: Color,
     in_effect: bool,
 }
 
@@ -50,8 +52,17 @@ impl Default for ButtonColorEffect {
     fn default() -> Self {
         Self {
             lighter: 0.1,
-            orig_color: Color::NONE,
+            orig_bg_color: Color::NONE,
+            orig_img_color: Color::NONE,
             in_effect: false,
+        }
+    }
+}
+impl ButtonColorEffect {
+    pub fn new(lighter: f32) -> Self {
+        Self {
+            lighter,
+            ..Self::default()
         }
     }
 }
@@ -105,21 +116,41 @@ fn btn_transform_effect(
 }
 
 fn btn_color_effect(
-    mut query: Query<(&mut BackgroundColor, &mut ButtonColorEffect, &Interaction), Changed<Interaction>>,
+    mut query: Query<
+        (
+            &mut BackgroundColor,
+            Option<&mut ImageNode>,
+            &mut ButtonColorEffect,
+            &Interaction,
+        ),
+        Changed<Interaction>,
+    >,
 ) {
-    for (mut bg_color, mut effect, interaction) in query.iter_mut() {
+    for (mut bg_color, image_node, mut effect, interaction) in query.iter_mut() {
         match interaction {
             Interaction::Pressed => {}
             Interaction::Hovered => {
                 effect.in_effect = true;
-                bg_color.0 = effect.orig_color.lighter(effect.lighter);
+                bg_color.0 = effect.orig_bg_color.lighter(effect.lighter);
+                if let Some(mut node) = image_node {
+                    node.color = node.color.lighter(effect.lighter);
+                }
             }
             Interaction::None => {
                 if effect.in_effect {
-                    bg_color.0 = effect.orig_color;
+                    bg_color.0 = effect.orig_bg_color;
                     effect.in_effect = false;
                 }
-                effect.orig_color = bg_color.0;
+                effect.orig_bg_color = bg_color.0;
+
+                if let Some(node) = &image_node {
+                    effect.orig_img_color = node.color;
+                }
+                if effect.in_effect {
+                    if let Some(mut node) = image_node {
+                        node.color = effect.orig_img_color;
+                    }
+                }
             }
         }
     }
@@ -148,7 +179,7 @@ fn btn_toggle_effect(
                 };
 
                 if let Some(mut btn_color_effect) = btn_color_effect_opt {
-                    btn_color_effect.orig_color = bg_color.0;
+                    btn_color_effect.orig_bg_color = bg_color.0;
                 }
             }
             Interaction::Hovered => {}
