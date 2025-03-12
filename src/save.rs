@@ -68,7 +68,7 @@ pub trait EncryptSave: Serialize + for<'de> Deserialize<'de> {
     fn load_from(&mut self, config_path: &PathBuf) -> anyhow::Result<()> {
         let enc_saved = std::fs::read(config_path)?;
         let decrypted = decrypt(enc_saved.as_slice(), Self::ENCR_KEY.as_bytes())?;
-        *self = bincode::deserialize(decrypted.as_slice())?;
+        (*self, _) = bincode::serde::decode_from_slice(decrypted.as_slice(), bincode::config::legacy())?;
         Ok(())
     }
 
@@ -78,7 +78,7 @@ pub trait EncryptSave: Serialize + for<'de> Deserialize<'de> {
     }
 
     fn save_to(&self, saved_path: PathBuf) -> anyhow::Result<()> {
-        let data = bincode::serialize(self)?;
+        let data = bincode::serde::encode_to_vec(self, bincode::config::legacy())?;
         let enc_saved = encrypt(data.as_slice(), Self::ENCR_KEY.as_bytes())?;
 
         #[cfg(not(target_arch = "wasm32"))]
