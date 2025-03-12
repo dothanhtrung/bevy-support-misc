@@ -14,16 +14,16 @@ impl Plugin for ScaleEasingPlugin {
 }
 
 #[derive(Event, Deref, DerefMut)]
-pub struct ScaleEasingEnded(pub Entity);
+pub struct ScaleEasingEnded(pub EaseFunction);
 
 #[derive(Component, Default)]
 pub struct ScaleEasingEffect {
-    scale_gap: Vec3,
-    scale_orig: Option<Vec3>,
-    scale_start: Option<Vec3>,
-    duration_ms: u128,
+    pub scale_gap: Vec3,
+    pub scale_orig: Option<Vec3>,
+    pub scale_start: Option<Vec3>,
+    pub duration_ms: u128,
     elapsed: u128,
-    function: Option<EaseFunction>,
+    pub function: Option<EaseFunction>,
 }
 
 impl ScaleEasingEffect {
@@ -55,14 +55,12 @@ impl ScaleEasingEffect {
         self.function = Some(ease_function);
         self
     }
+    pub fn reset(&mut self) {
+        self.elapsed = 0;
+    }
 }
 
-fn easing(
-    mut commands: Commands,
-    mut query: Query<(&mut Transform, &mut ScaleEasingEffect, Entity)>,
-    mut event: EventWriter<ScaleEasingEnded>,
-    time: Res<Time>,
-) {
+fn easing(mut commands: Commands, mut query: Query<(&mut Transform, &mut ScaleEasingEffect, Entity)>, time: Res<Time>) {
     let delta = time.delta().as_millis();
     for (mut transform, mut easing, entity) in query.iter_mut() {
         if easing.elapsed > easing.duration_ms || easing.function.is_none() {
@@ -86,8 +84,7 @@ fn easing(
         }
 
         if percent >= 1. {
-            event.send(ScaleEasingEnded(entity));
-            commands.trigger_targets(ScaleEasingEnded(entity), entity);
+            commands.trigger_targets(ScaleEasingEnded(easing.function.unwrap()), entity);
         }
     }
 }
