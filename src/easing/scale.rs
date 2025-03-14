@@ -1,8 +1,8 @@
 use bevy::app::{App, Update};
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default, Commands, Component, Curve, Deref, DerefMut, EaseFunction, EasingCurve, Entity, Event, EventWriter,
-    Plugin, Query, Res, Time, Transform,
+    default, Commands, Component, Curve, Deref, DerefMut, EaseFunction, EasingCurve, Entity, Event, Plugin, Query, Res,
+    Time, Transform,
 };
 
 pub struct ScaleEasingPlugin;
@@ -80,7 +80,6 @@ fn easing(mut commands: Commands, mut query: Query<(&mut Transform, &mut ScaleEa
         let rate = f.sample(percent).unwrap_or(1.);
         if let Some(start_scale) = easing.scale_start {
             transform.scale = start_scale + easing.scale_gap * Vec3::splat(rate);
-            // transform.translation = start.translation + easing.scale_gap.translation * Vec3::splat(rate);
         }
 
         if percent >= 1. {
