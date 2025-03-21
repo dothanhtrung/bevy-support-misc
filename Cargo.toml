@@ -13,10 +13,9 @@ categories = ["game-development"]
 [dependencies]
 bevy = { version = "0.15", features = ["bevy_ui", "bevy_color", "bevy_text"], default-features = false }
 serde = "1.0"
-bincode = { version = "2.0" , features = ["serde"]}
+bincode = { version = "2.0", features = ["serde"] }
 anyhow = "1.0"
 simple_crypt = "0.2"
-bevy_text_edit = "0.4"
 
 [dev-dependencies]
 bevy = { version = "0.15" }

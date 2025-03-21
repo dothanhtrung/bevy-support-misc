@@ -5,13 +5,13 @@
 
 use bevy::prelude::{Commands, Component, DespawnRecursiveExt, Entity, Query, Visibility, With};
 
+pub mod color;
 pub mod easing;
 pub mod save;
 pub mod setting;
+pub mod timer;
 pub mod transform;
 pub mod ui;
-pub mod color;
-pub mod timer;
 
 pub fn show_ui<T>(mut query: Query<&mut Visibility, With<T>>)
 where

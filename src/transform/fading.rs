@@ -40,7 +40,7 @@ impl FadeSupport {
         self.timer.reset();
         self.timer.unpause();
     }
-    
+
     pub fn change(&mut self, fade: Fade) {
         self.fade = fade;
     }

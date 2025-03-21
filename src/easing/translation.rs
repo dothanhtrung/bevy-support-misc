@@ -1,13 +1,15 @@
 use bevy::app::{App, Update};
 use bevy::math::Vec3;
-use bevy::prelude::{Commands, Component, Curve, Deref, DerefMut, EaseFunction, EasingCurve, Entity, Event, EventWriter, Plugin, Query, Res, Time, Transform};
+use bevy::prelude::{
+    Commands, Component, Curve, Deref, DerefMut, EaseFunction, EasingCurve, Entity, Event, EventWriter, Plugin, Query,
+    Res, Time, Transform,
+};
 
 pub struct TranslationEasingPlugin;
 
 impl Plugin for TranslationEasingPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<TranslationEasingEnded>()
-            .add_systems(Update, easing);
+        app.add_event::<TranslationEasingEnded>().add_systems(Update, easing);
     }
 }
 

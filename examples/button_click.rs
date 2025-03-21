@@ -18,7 +18,7 @@ fn setup(mut commands: Commands) {
     commands.spawn((
         ButtonTransformEffect::default(),
         ButtonColorEffect::default(),
-        ButtonToggleEffect{
+        ButtonToggleEffect {
             on_color: GREEN_400.into(),
             off_color: GREEN_800.into(),
             enabled: true,
