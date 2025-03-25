@@ -7,7 +7,9 @@ use bevy::prelude::{Commands, Component, DespawnRecursiveExt, Entity, Query, Vis
 
 pub mod color;
 pub mod easing;
+#[cfg(feature = "save")]
 pub mod save;
+#[cfg(feature = "setting")]
 pub mod setting;
 pub mod timer;
 pub mod transform;
