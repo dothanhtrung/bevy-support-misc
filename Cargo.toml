@@ -4,9 +4,9 @@ version = "0.3.0"
 authors = ["Trung Do <dothanhtrung@pm.me>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
-repository = "https://gitlab.com/kimtinh/bevy-support.git"
+repository = "https://gitlab.com/kimtinh/bevy-support-misc.git"
 keywords = ["bevy"]
-description = ""
+description = "My tiny common code to share between bevy game projects"
 exclude = ["assets", "examples", "tests", ".cargo"]
 categories = ["game-development"]
 
