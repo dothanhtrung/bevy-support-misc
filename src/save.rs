@@ -60,9 +60,18 @@ pub trait EncryptSave: Serialize + for<'de> Deserialize<'de> {
     const DEFAULT_SAVE: &'static str = "default_save.dat";
     const ENCR_KEY: &'static str = "0123456789abcdef";
 
+    fn save_path() -> PathBuf {
+        if cfg!(target_os = "android") {
+            PathBuf::from(format!("/sdcard/{}", Self::DEFAULT_SAVE))
+        } else if let Some(data_local_dir) = dirs::data_local_dir() {
+            data_local_dir.join(Self::DEFAULT_SAVE)
+        } else {
+            PathBuf::from(Self::DEFAULT_SAVE)
+        }
+    }
+
     fn load(&mut self) -> anyhow::Result<()> {
-        let config_path = PathBuf::from(Self::DEFAULT_SAVE);
-        self.load_from(&config_path)
+        self.load_from(&Self::save_path())
     }
 
     fn load_from(&mut self, config_path: &PathBuf) -> anyhow::Result<()> {
@@ -73,8 +82,7 @@ pub trait EncryptSave: Serialize + for<'de> Deserialize<'de> {
     }
 
     fn save(&self) -> anyhow::Result<()> {
-        let config_path = PathBuf::from(Self::DEFAULT_SAVE);
-        self.save_to(config_path)
+        self.save_to(Self::save_path())
     }
 
     fn save_to(&self, saved_path: PathBuf) -> anyhow::Result<()> {

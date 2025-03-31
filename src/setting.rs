@@ -2,11 +2,11 @@ use bevy::app::App;
 use bevy::asset::ron::de::from_reader;
 use bevy::asset::ron::ser::{to_string_pretty, PrettyConfig};
 use bevy::prelude::{on_event, warn, Event, IntoSystemConfigs, Plugin, Res, ResMut, Resource, Startup, Update};
+use bevy::tasks::IoTaskPool;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
-use bevy::tasks::IoTaskPool;
 
 pub struct GameSettingSupportPlugin<T>
 where
@@ -60,9 +60,18 @@ where
 pub trait GameSetting: Serialize + for<'de> Deserialize<'de> {
     const DEFAULT_CONF: &'static str = "game_setting.conf";
 
+    fn config_path() -> PathBuf {
+        if cfg!(target_os = "android") {
+            PathBuf::from(format!("/sdcard/{}", Self::DEFAULT_CONF))
+        } else if let Some(data_local_dir) = dirs::data_local_dir() {
+            data_local_dir.join(Self::DEFAULT_CONF)
+        } else {
+            PathBuf::from(Self::DEFAULT_CONF)
+        }
+    }
+
     fn load(&mut self) -> anyhow::Result<()> {
-        let config_path = PathBuf::from(Self::DEFAULT_CONF);
-        self.load_from(&config_path)
+        self.load_from(&Self::config_path())
     }
 
     fn load_from(&mut self, config_path: &PathBuf) -> anyhow::Result<()> {
@@ -72,8 +81,7 @@ pub trait GameSetting: Serialize + for<'de> Deserialize<'de> {
     }
 
     fn save(&self) -> anyhow::Result<()> {
-        let config_path = PathBuf::from(Self::DEFAULT_CONF);
-        self.save_to(config_path)
+        self.save_to(Self::config_path())
     }
 
     fn save_to(&self, config_path: PathBuf) -> anyhow::Result<()> {
