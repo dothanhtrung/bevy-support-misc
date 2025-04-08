@@ -44,7 +44,11 @@ where
     T: Resource + GameSetting,
 {
     if let Err(e) = config.load() {
-        warn!("Failed to load game config: {}", e);
+        warn!(
+            "Failed to load game config {} : {}",
+            T::config_path().as_path().to_str().unwrap_or_default(),
+            e
+        );
     }
 }
 
@@ -53,7 +57,11 @@ where
     T: Resource + GameSetting,
 {
     if let Err(e) = config.save() {
-        warn!("Failed to save game config: {}", e);
+        warn!(
+            "Failed to save game config {}: {}",
+            T::config_path().as_path().to_str().unwrap_or_default(),
+            e
+        );
     }
 }
 
@@ -62,7 +70,8 @@ pub trait GameSetting: Serialize + for<'de> Deserialize<'de> {
 
     fn config_path() -> PathBuf {
         if cfg!(target_os = "android") {
-            PathBuf::from(format!("/sdcard/{}", Self::DEFAULT_CONF))
+            // It should be /data/data/com.yourapp.package/setting.txt
+            PathBuf::from(Self::DEFAULT_CONF)
         } else if let Some(data_local_dir) = dirs::data_local_dir() {
             data_local_dir.join(Self::DEFAULT_CONF)
         } else {

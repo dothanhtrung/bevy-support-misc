@@ -43,7 +43,11 @@ where
     T: Resource + EncryptSave,
 {
     if let Err(e) = data.load() {
-        warn!("Failed to load save data: {}", e);
+        warn!(
+            "Failed to load save data {}: {}",
+            T::save_path().as_path().to_str().unwrap_or_default(),
+            e
+        );
     }
 }
 
@@ -52,7 +56,11 @@ where
     T: Resource + EncryptSave,
 {
     if let Err(e) = data.save() {
-        warn!("Failed to save game: {}", e);
+        warn!(
+            "Failed to save data {}: {}",
+            T::save_path().as_path().to_str().unwrap_or_default(),
+            e
+        );
     }
 }
 
@@ -62,7 +70,8 @@ pub trait EncryptSave: Serialize + for<'de> Deserialize<'de> {
 
     fn save_path() -> PathBuf {
         if cfg!(target_os = "android") {
-            PathBuf::from(format!("/sdcard/{}", Self::DEFAULT_SAVE))
+            // It should be /data/data/com.yourapp.package/default_save.dat
+            PathBuf::from(Self::DEFAULT_SAVE)
         } else if let Some(data_local_dir) = dirs::data_local_dir() {
             data_local_dir.join(Self::DEFAULT_SAVE)
         } else {
