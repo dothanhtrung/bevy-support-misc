@@ -1,14 +1,13 @@
 use bevy::color::palettes::tailwind::GREEN_400;
 use bevy::prelude::*;
-use bevy_support_misc::easing::EasingSupportPlugin;
-use bevy_support_misc::easing::scale::ScaleEasingEffect;
+use bevy_support_misc::easing::scale::{ScaleEasingEffect, ScaleEasingPluginAnyState};
 use bevy_support_misc::transform::fading::{Fade, FadeSupport};
 use bevy_support_misc::transform::TransformSupportPlugin;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins((TransformSupportPlugin, EasingSupportPlugin))
+        .add_plugins((TransformSupportPlugin, ScaleEasingPluginAnyState::new()))
         .add_systems(Startup, setup)
         .run();
 }

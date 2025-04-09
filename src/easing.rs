@@ -1,15 +1,7 @@
 pub mod scale;
 pub mod translation;
 
-use crate::easing::scale::ScaleEasingPlugin;
-use crate::easing::translation::TranslationEasingPlugin;
-use bevy::app::App;
-use bevy::prelude::Plugin;
+use bevy::prelude::States;
 
-pub struct EasingSupportPlugin;
-
-impl Plugin for EasingSupportPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_plugins((ScaleEasingPlugin, TranslationEasingPlugin));
-    }
-}
+#[derive(States, Clone, Eq, PartialEq, Debug, Hash)]
+pub struct DummyState {}

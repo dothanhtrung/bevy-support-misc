@@ -1,15 +1,52 @@
 use bevy::app::{App, Update};
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default, Commands, Component, Curve, Deref, DerefMut, EaseFunction, EasingCurve, Entity, Event, Plugin, Query, Res,
-    Time, Transform,
+    default, in_state, Commands, Component, Curve, Deref, DerefMut, EaseFunction, EasingCurve, Entity, Event,
+    IntoSystemConfigs, Plugin, Query, Res, States, Time, Transform,
 };
+use crate::easing::DummyState;
 
-pub struct ScaleEasingPlugin;
+pub struct ScaleEasingPlugin<T>
+where
+    T: States,
+{
+    pub states: Option<Vec<T>>,
+}
 
-impl Plugin for ScaleEasingPlugin {
+impl<T> ScaleEasingPlugin<T>
+where
+    T: States,
+{
+    pub fn new(states: Vec<T>) -> Self {
+        Self { states: Some(states) }
+    }
+    pub fn any() -> Self {
+        Self { states: None }
+    }
+}
+
+impl<T> Plugin for ScaleEasingPlugin<T>
+where
+    T: States,
+{
     fn build(&self, app: &mut App) {
-        app.add_event::<ScaleEasingEnded>().add_systems(Update, easing);
+        app.add_event::<ScaleEasingEnded>();
+
+        if let Some(states) = &self.states {
+            for state in states {
+                app.add_systems(Update, easing.run_if(in_state(state.clone())));
+            }
+        } else {
+            app.add_systems(Update, easing);
+        }
+    }
+}
+
+pub struct ScaleEasingPluginAnyState;
+
+impl ScaleEasingPluginAnyState {
+    pub fn new() -> ScaleEasingPlugin<DummyState> {
+        ScaleEasingPlugin::any()
     }
 }
 

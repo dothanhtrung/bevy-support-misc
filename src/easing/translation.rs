@@ -1,15 +1,54 @@
 use bevy::app::{App, Update};
 use bevy::math::Vec3;
 use bevy::prelude::{
-    Commands, Component, Curve, Deref, DerefMut, EaseFunction, EasingCurve, Entity, Event, EventWriter, Plugin, Query,
-    Res, Time, Transform,
+    in_state, Commands, Component, Curve, Deref, DerefMut, EaseFunction, EasingCurve, Entity, Event, EventWriter,
+    IntoSystemConfigs, Plugin, Query, Res, States, Time, Transform,
 };
+use crate::easing::DummyState;
+use crate::easing::scale::ScaleEasingPlugin;
 
-pub struct TranslationEasingPlugin;
+pub struct TranslationEasingPlugin<T>
+where
+    T: States,
+{
+    pub states: Option<Vec<T>>,
+}
 
-impl Plugin for TranslationEasingPlugin {
+impl<T> TranslationEasingPlugin<T>
+where
+    T: States,
+{
+    pub fn new(states: Vec<T>) -> Self {
+        Self { states: Some(states) }
+    }
+
+    pub fn any() -> Self {
+        Self { states: None }
+    }
+}
+
+impl<T> Plugin for TranslationEasingPlugin<T>
+where
+    T: States,
+{
     fn build(&self, app: &mut App) {
-        app.add_event::<TranslationEasingEnded>().add_systems(Update, easing);
+        app.add_event::<TranslationEasingEnded>();
+
+        if let Some(states) = &self.states {
+            for state in states {
+                app.add_systems(Update, easing.run_if(in_state(state.clone())));
+            }
+        } else {
+            app.add_systems(Update, easing);
+        }
+    }
+}
+
+pub struct TranslationEasingPluginAnyState;
+
+impl TranslationEasingPluginAnyState {
+    pub fn new() -> TranslationEasingPlugin<DummyState> {
+        TranslationEasingPlugin::any()
     }
 }
 
