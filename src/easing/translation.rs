@@ -5,7 +5,6 @@ use bevy::prelude::{
     IntoSystemConfigs, Plugin, Query, Res, States, Time, Transform,
 };
 use crate::easing::DummyState;
-use crate::easing::scale::ScaleEasingPlugin;
 
 pub struct TranslationEasingPlugin<T>
 where
