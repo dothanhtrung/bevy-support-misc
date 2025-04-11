@@ -1,7 +1,7 @@
 use bevy::app::App;
 use bevy::math::Vec3;
 use bevy::prelude::{
-    Changed, Color, Component, ImageNode, Interaction, IntoSystemConfigs, Luminance, Plugin, Query, Text, Transform,
+    Changed, Color, Component, ImageNode, Interaction, IntoScheduleConfigs, Luminance, Plugin, Query, Text, Transform,
     Update,
 };
 use bevy::ui::BackgroundColor;

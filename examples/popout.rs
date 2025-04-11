@@ -32,7 +32,7 @@ fn setup(mut commands: Commands) {
 
 fn hover_in(trigger: Trigger<Pointer<Over>>, mut commands: Commands) {
     commands
-        .entity(trigger.entity())
+        .entity(trigger.target())
         .insert(ScaleEasingEffect::popout(Vec3::splat(2.), 1000));
 }
 
@@ -41,8 +41,8 @@ fn hover_out(
     mut commands: Commands,
     mut query: Query<(&mut Transform, &ScaleEasingEffect)>,
 ) {
-    if let Ok((mut transform, popout)) = query.get_mut(trigger.entity()) {
+    if let Ok((mut transform, popout)) = query.get_mut(trigger.target()) {
         transform.scale = popout.orig_scale().unwrap_or(Vec3::splat(1.));
     }
-    commands.entity(trigger.entity()).remove::<ScaleEasingEffect>();
+    commands.entity(trigger.target()).remove::<ScaleEasingEffect>();
 }

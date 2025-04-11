@@ -3,7 +3,7 @@
 //! ### Plugin
 //! doc goes here
 
-use bevy::prelude::{Commands, Component, DespawnRecursiveExt, Entity, Query, Visibility, With};
+use bevy::prelude::{Commands, Component, Entity, Query, Visibility, With};
 
 pub mod color;
 pub mod easing;
@@ -38,6 +38,6 @@ where
     T: Component,
 {
     for e in query.iter() {
-        commands.entity(e).despawn_recursive();
+        commands.entity(e).despawn();
     }
 }

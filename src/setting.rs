@@ -1,7 +1,7 @@
 use bevy::app::App;
 use bevy::asset::ron::de::from_reader;
 use bevy::asset::ron::ser::{to_string_pretty, PrettyConfig};
-use bevy::prelude::{on_event, warn, Event, IntoSystemConfigs, Plugin, Res, ResMut, Resource, Startup, Update};
+use bevy::prelude::{on_event, warn, Event, IntoScheduleConfigs, Plugin, Res, ResMut, Resource, Startup, Update};
 use bevy::tasks::IoTaskPool;
 use serde::{Deserialize, Serialize};
 use std::fs::File;

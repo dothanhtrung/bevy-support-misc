@@ -1,5 +1,5 @@
 use bevy::app::App;
-use bevy::prelude::{on_event, warn, Event, IntoSystemConfigs, Plugin, Res, ResMut, Resource, Startup, Update};
+use bevy::prelude::{on_event, warn, Event, IntoScheduleConfigs, Plugin, Res, ResMut, Resource, Startup, Update};
 use bevy::tasks::IoTaskPool;
 use serde::{Deserialize, Serialize};
 use simple_crypt::{decrypt, encrypt};

@@ -1,6 +1,6 @@
 use crate::timer::AutoTimer;
 use bevy::app::{App, Plugin, Update};
-use bevy::prelude::{Alpha, Commands, Visibility, Component, DespawnRecursiveExt, Entity, Query, Res, Sprite, Time, Timer};
+use bevy::prelude::{Alpha, Commands, Component, Entity, Query, Res, Sprite, Time, Timer, Visibility};
 use bevy::text::TextColor;
 use bevy::ui::BackgroundColor;
 
@@ -88,7 +88,7 @@ fn fading(
             *visibility = Visibility::Hidden;
 
             if fading.despawn_on_finish {
-                commands.entity(entity).despawn_recursive();
+                commands.entity(entity).despawn();
             }
         }
     }
