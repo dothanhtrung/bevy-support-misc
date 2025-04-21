@@ -26,9 +26,9 @@ check:
 #   script:
 #     - cargo test --tests
 
-#publish:
-#  stage: deploy
-#  script:
-#    - cargo publish --token $CARGO_REGISTRY_TOKEN
-#  only:
-#    - tags
+publish:
+  stage: deploy
+  script:
+    - cargo publish --token $CARGO_REGISTRY_TOKEN
+  only:
+    - tags
