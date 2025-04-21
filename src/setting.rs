@@ -1,7 +1,9 @@
 use bevy::app::App;
 use bevy::asset::ron::de::from_reader;
 use bevy::asset::ron::ser::{to_string_pretty, PrettyConfig};
-use bevy::prelude::{on_event, warn, Event, IntoScheduleConfigs, Plugin, Res, ResMut, Resource, Startup, Update};
+#[cfg(feature = "log")]
+use bevy::prelude::warn;
+use bevy::prelude::{on_event, Event, IntoScheduleConfigs, Plugin, Res, ResMut, Resource, Startup, Update};
 use bevy::tasks::IoTaskPool;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -43,11 +45,12 @@ fn load_config<T>(mut config: ResMut<T>)
 where
     T: Resource + GameSetting,
 {
-    if let Err(e) = config.load() {
+    if let Err(_e) = config.load() {
+        #[cfg(feature = "log")]
         warn!(
             "Failed to load game config {} : {}",
             T::config_path().as_path().to_str().unwrap_or_default(),
-            e
+            _e
         );
     }
 }
@@ -56,11 +59,12 @@ fn save_config<T>(config: Res<T>)
 where
     T: Resource + GameSetting,
 {
-    if let Err(e) = config.save() {
+    if let Err(_e) = config.save() {
+        #[cfg(feature = "log")]
         warn!(
             "Failed to save game config {}: {}",
             T::config_path().as_path().to_str().unwrap_or_default(),
-            e
+            _e
         );
     }
 }

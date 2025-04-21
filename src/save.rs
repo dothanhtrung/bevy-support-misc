@@ -1,5 +1,7 @@
 use bevy::app::App;
-use bevy::prelude::{on_event, warn, Event, IntoScheduleConfigs, Plugin, Res, ResMut, Resource, Startup, Update};
+#[cfg(feature = "log")]
+use bevy::prelude::warn;
+use bevy::prelude::{on_event, Event, IntoScheduleConfigs, Plugin, Res, ResMut, Resource, Startup, Update};
 use bevy::tasks::IoTaskPool;
 use serde::{Deserialize, Serialize};
 use simple_crypt::{decrypt, encrypt};
@@ -42,11 +44,12 @@ fn load<T>(mut data: ResMut<T>)
 where
     T: Resource + EncryptSave,
 {
-    if let Err(e) = data.load() {
+    if let Err(_e) = data.load() {
+        #[cfg(feature = "log")]
         warn!(
             "Failed to load save data {}: {}",
             T::save_path().as_path().to_str().unwrap_or_default(),
-            e
+            _e
         );
     }
 }
@@ -55,11 +58,12 @@ fn save<T>(data: Res<T>)
 where
     T: Resource + EncryptSave,
 {
-    if let Err(e) = data.save() {
+    if let Err(_e) = data.save() {
+        #[cfg(feature = "log")]
         warn!(
             "Failed to save data {}: {}",
             T::save_path().as_path().to_str().unwrap_or_default(),
-            e
+            _e
         );
     }
 }
