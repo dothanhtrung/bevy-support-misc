@@ -1,5 +1,5 @@
 use bevy::app::App;
-use bevy::prelude::{Commands, Component, Deref, DerefMut, Entity, Event, Plugin, Query, Res, Timer, Update};
+use bevy::prelude::{Commands, Component, Entity, Event, Plugin, Query, Res, Timer, Update};
 use bevy::time::Time;
 
 pub struct TimerSupportPlugin;
@@ -10,24 +10,42 @@ impl Plugin for TimerSupportPlugin {
     }
 }
 
-#[derive(Component, Deref, DerefMut, Default)]
-pub struct AutoTimer(pub Timer);
+#[derive(Default)]
+pub enum ActionOnFinish {
+    #[default]
+    Nothing,
+    Despawn,
+    Remove,
+}
+
+#[derive(Component, Default)]
+pub struct AutoTimer {
+    pub timer: Timer,
+    pub action_on_finish: ActionOnFinish,
+}
 
 #[derive(Event)]
 pub struct AutoTimerFinished;
 
 impl AutoTimer {
     pub fn progress(&self) -> f32 {
-        self.0.elapsed().as_secs_f32() / self.0.duration().as_secs_f32()
+        self.timer.elapsed().as_secs_f32() / self.timer.duration().as_secs_f32()
     }
 }
 
 fn auto_tick(mut commands: Commands, time: Res<Time>, mut query: Query<(&mut AutoTimer, Entity)>) {
     for (mut timer, e) in query.iter_mut() {
-        if !timer.paused() {
-            timer.tick(time.delta());
-            if timer.just_finished() {
-                commands.trigger_targets(AutoTimerFinished, e);
+        timer.timer.tick(time.delta());
+        if timer.timer.just_finished() {
+            commands.trigger_targets(AutoTimerFinished, e);
+            match timer.action_on_finish {
+                ActionOnFinish::Nothing => {}
+                ActionOnFinish::Despawn => {
+                    commands.entity(e).despawn();
+                }
+                ActionOnFinish::Remove => {
+                    commands.entity(e).remove::<AutoTimer>();
+                }
             }
         }
     }
