@@ -1,4 +1,3 @@
-use crate::timer::AutoTimer;
 use bevy::app::{App, Plugin, Update};
 use bevy::prelude::{Alpha, Commands, Component, Entity, Query, Res, Sprite, Time, Timer, Visibility};
 use bevy::text::TextColor;
@@ -22,7 +21,7 @@ pub enum Fade {
 #[derive(Component, Default)]
 #[require(Visibility)]
 pub struct FadeSupport {
-    timer: AutoTimer,
+    timer: Timer,
     fade: Fade,
     despawn_on_finish: bool,
 }
@@ -30,7 +29,7 @@ pub struct FadeSupport {
 impl FadeSupport {
     pub fn new(timer: Timer, fade: Fade, despawn_on_finish: bool) -> Self {
         Self {
-            timer: AutoTimer(timer),
+            timer,
             fade,
             despawn_on_finish,
         }
@@ -64,7 +63,7 @@ fn fading(
         }
 
         fading.timer.tick(time.delta());
-        let progress = fading.timer.progress();
+        let progress = fading.timer.elapsed().as_secs_f32() / fading.timer.duration().as_secs_f32();
 
         let alpha = match fading.fade {
             Fade::In => {

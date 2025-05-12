@@ -11,7 +11,6 @@ pub mod easing;
 pub mod save;
 #[cfg(feature = "setting")]
 pub mod setting;
-pub mod timer;
 pub mod transform;
 pub mod ui;
 
