@@ -13,6 +13,8 @@ pub mod save;
 pub mod setting;
 pub mod transform;
 pub mod ui;
+#[cfg(feature = "ron_loader")]
+mod ron_asset_loader;
 
 pub fn show_ui<T>(mut query: Query<&mut Visibility, With<T>>)
 where
