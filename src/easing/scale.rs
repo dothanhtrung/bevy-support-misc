@@ -61,6 +61,7 @@ pub struct ScaleEasingEffect {
     pub duration_ms: u128,
     elapsed: u128,
     pub function: Option<EaseFunction>,
+    pub repeat: bool,
 }
 
 impl ScaleEasingEffect {
@@ -92,6 +93,12 @@ impl ScaleEasingEffect {
         self.function = Some(ease_function);
         self
     }
+
+    pub fn with_repeat(mut self, repeat: bool) -> Self {
+        self.repeat = repeat;
+        self
+    }
+
     pub fn reset(&mut self) {
         self.elapsed = 0;
     }
@@ -121,6 +128,9 @@ fn easing(mut commands: Commands, mut query: Query<(&mut Transform, &mut ScaleEa
 
         if percent >= 1. {
             commands.trigger_targets(ScaleEasingEnded(easing.function.unwrap()), entity);
+            if easing.repeat {
+                easing.reset();
+            }
         }
     }
 }
