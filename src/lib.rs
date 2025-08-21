@@ -1,9 +1,7 @@
-// Copyright 2024 Trung Do <dothanhtrung@pm.me>
-
 //! ### Plugin
 //! doc goes here
 
-use bevy::prelude::{Commands, Component, Entity, Query, Visibility, With};
+use bevy::prelude::{Commands, Component, Entity, Query, States, Visibility, With};
 
 pub mod color;
 pub mod easing;
@@ -14,7 +12,11 @@ pub mod setting;
 pub mod transform;
 pub mod ui;
 #[cfg(feature = "ron_loader")]
-mod ron_asset_loader;
+pub mod ron_asset_loader;
+pub mod camera;
+
+#[derive(States, Clone, Eq, PartialEq, Debug, Hash)]
+struct DummyState {}
 
 pub fn show_ui<T>(mut query: Query<&mut Visibility, With<T>>)
 where

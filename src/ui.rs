@@ -1,5 +1,3 @@
-// Copyright 2024 Trung Do <dothanhtrung@pm.me>
-
 pub mod button;
 
 use crate::ui::button::GameButtonPlugin;

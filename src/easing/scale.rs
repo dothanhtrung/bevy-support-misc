@@ -1,10 +1,11 @@
-use crate::easing::DummyState;
+
 use bevy::app::{App, Update};
 use bevy::math::Vec3;
 use bevy::prelude::{
     default, in_state, Commands, Component, Curve, Deref, DerefMut, EaseFunction, EasingCurve, Entity, Event,
     IntoScheduleConfigs, Plugin, Query, Res, States, Time, Transform,
 };
+use crate::DummyState;
 
 pub struct ScaleEasingPlugin<T>
 where

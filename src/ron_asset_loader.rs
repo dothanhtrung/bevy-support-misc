@@ -1,5 +1,3 @@
-// Copyright 2025 Trung Do <dothanhtrung@pm.me>
-
 use bevy::app::App;
 use bevy::asset::io::Reader;
 use bevy::asset::{AssetLoader, LoadContext};
