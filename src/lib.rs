@@ -16,7 +16,7 @@ pub mod ron_asset_loader;
 pub mod camera;
 
 #[derive(States, Clone, Eq, PartialEq, Debug, Hash)]
-struct DummyState {}
+pub struct DummyState {}
 
 pub fn show_ui<T>(mut query: Query<&mut Visibility, With<T>>)
 where

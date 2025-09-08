@@ -1,13 +1,20 @@
+use crate::DummyState;
 use bevy::app::App;
 use bevy::prelude::{
     in_state, Camera, Component, IntoScheduleConfigs, Plugin, Query, States, Transform, Update, Vec3, With, Without,
 };
 
+macro_rules! plugin_systems {
+    ( ) => {
+        (lock_target)
+    };
+}
+
 pub struct CameraSupportPlugin<T>
 where
     T: States,
 {
-    pub states: Option<Vec<T>>,
+    pub states: Vec<T>,
 }
 
 impl<T> CameraSupportPlugin<T>
@@ -15,11 +22,19 @@ where
     T: States,
 {
     pub fn new(states: Vec<T>) -> Self {
-        Self { states: Some(states) }
+        Self { states }
     }
 
     pub fn any() -> Self {
-        Self { states: None }
+        Self { states: Vec::new() }
+    }
+}
+
+pub struct CameraSupportPluginAnyState;
+
+impl CameraSupportPluginAnyState {
+    pub fn any() -> CameraSupportPlugin<DummyState> {
+        CameraSupportPlugin::new(Vec::new())
     }
 }
 
@@ -28,12 +43,12 @@ where
     T: States,
 {
     fn build(&self, app: &mut App) {
-        if let Some(states) = &self.states {
-            for state in states {
-                app.add_systems(Update, lock_target.run_if(in_state(state)));
-            }
+        if self.states.is_empty() {
+            app.add_systems(Update, plugin_systems!());
         } else {
-            app.add_systems(Update, lock_target);
+            for state in &self.states {
+                app.add_systems(Update, plugin_systems!().run_if(in_state(state.clone())));
+            }
         }
     }
 }
