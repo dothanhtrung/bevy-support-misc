@@ -1,8 +1,6 @@
 use crate::DummyState;
 use bevy::app::App;
-use bevy::prelude::{
-    in_state, Camera, Component, IntoScheduleConfigs, Plugin, Query, States, Transform, Update, Vec3, With, Without,
-};
+use bevy::prelude::{in_state, Camera, Changed, Component, IntoScheduleConfigs, Plugin, Query, States, Transform, Update, Vec3, With, Without};
 
 macro_rules! plugin_systems {
     ( ) => {
@@ -61,7 +59,7 @@ pub struct CameraLock {
 
 fn lock_target(
     target: Query<(&Transform, &CameraLock)>,
-    mut camera: Query<&mut Transform, (With<Camera>, Without<CameraLock>)>,
+    mut camera: Query<&mut Transform, (Changed<Transform>, With<Camera>, Without<CameraLock>)>,
 ) {
     if let Ok((target_transform, camera_lock)) = target.single() {
         if camera_lock.is_free {
