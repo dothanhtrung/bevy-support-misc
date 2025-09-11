@@ -3,7 +3,7 @@ use bevy::asset::ron::de::from_reader;
 use bevy::asset::ron::ser::{to_string_pretty, PrettyConfig};
 #[cfg(feature = "log")]
 use bevy::prelude::warn;
-use bevy::prelude::{on_event, Event, IntoScheduleConfigs, Plugin, Res, ResMut, Resource, Startup, Update};
+use bevy::prelude::{on_event, Event, EventWriter, IntoScheduleConfigs, Plugin, Res, ResMut, Resource, Startup, Update};
 use bevy::tasks::IoTaskPool;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -24,6 +24,7 @@ where
     fn build(&self, app: &mut App) {
         app.insert_resource(self.config.clone())
             .add_event::<GameSettingChanged>()
+            .add_event::<GameSettingLoaded>()
             .add_systems(Startup, load_config::<T>)
             .add_systems(Update, save_config::<T>.run_if(on_event::<GameSettingChanged>));
     }
@@ -41,7 +42,10 @@ where
 #[derive(Event)]
 pub struct GameSettingChanged;
 
-fn load_config<T>(mut config: ResMut<T>)
+#[derive(Event)]
+pub struct GameSettingLoaded;
+
+fn load_config<T>(mut config: ResMut<T>, mut event: EventWriter<GameSettingLoaded>)
 where
     T: Resource + GameSetting,
 {
@@ -52,6 +56,8 @@ where
             T::config_path().as_path().to_str().unwrap_or_default(),
             _e
         );
+    } else {
+        event.write(GameSettingLoaded);
     }
 }
 
