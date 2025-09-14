@@ -1,7 +1,7 @@
 use bevy::app::App;
 #[cfg(feature = "log")]
 use bevy::prelude::warn;
-use bevy::prelude::{on_event, Event, IntoScheduleConfigs, Plugin, Res, ResMut, Resource, Startup, Update};
+use bevy::prelude::{on_message, IntoScheduleConfigs, Message, Plugin, Res, ResMut, Resource, Startup, Update};
 use bevy::tasks::IoTaskPool;
 use serde::{Deserialize, Serialize};
 use simple_crypt::{decrypt, encrypt};
@@ -22,9 +22,9 @@ where
 {
     fn build(&self, app: &mut App) {
         app.insert_resource(self.config.clone())
-            .add_event::<SaveEncrypt>()
+            .add_message::<SaveEncrypt>()
             .add_systems(Startup, load::<T>)
-            .add_systems(Update, save::<T>.run_if(on_event::<SaveEncrypt>));
+            .add_systems(Update, save::<T>.run_if(on_message::<SaveEncrypt>));
     }
 }
 
@@ -37,7 +37,7 @@ where
     }
 }
 
-#[derive(Event)]
+#[derive(Message)]
 pub struct SaveEncrypt;
 
 fn load<T>(mut data: ResMut<T>)

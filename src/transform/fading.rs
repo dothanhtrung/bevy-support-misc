@@ -58,7 +58,7 @@ fn fading(
     time: Res<Time>,
 ) {
     for (background_color, text_color, sprite, mut fading, mut visibility, entity) in query.iter_mut() {
-        if fading.timer.finished() {
+        if fading.timer.is_finished() {
             return;
         }
 
