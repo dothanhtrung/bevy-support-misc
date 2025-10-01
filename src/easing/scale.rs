@@ -2,7 +2,7 @@ use crate::DummyState;
 use bevy::app::{App, Update};
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default, in_state, Commands, Component, Curve, EaseFunction, EasingCurve, Entity, Event,
+    default, in_state, Commands, Component, Curve, EaseFunction, EasingCurve, Entity, EntityEvent,
     IntoScheduleConfigs, Plugin, Query, Res, States, Time, Transform,
 };
 
@@ -48,7 +48,7 @@ impl ScaleEasingPluginAnyState {
     }
 }
 
-#[derive(Event)]
+#[derive(EntityEvent)]
 pub struct ScaleEasingEnded {
     pub entity: Entity,
     pub ease_function: EaseFunction,
