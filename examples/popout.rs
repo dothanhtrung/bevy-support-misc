@@ -30,19 +30,19 @@ fn setup(mut commands: Commands) {
         .observe(hover_out);
 }
 
-fn hover_in(trigger: Trigger<Pointer<Over>>, mut commands: Commands) {
+fn hover_in(trigger: On<Pointer<Over>>, mut commands: Commands) {
     commands
-        .entity(trigger.target())
+        .entity(trigger.entity)
         .insert(ScaleEasingEffect::popout(Vec3::splat(2.), 1000));
 }
 
 fn hover_out(
-    trigger: Trigger<Pointer<Out>>,
+    trigger: On<Pointer<Out>>,
     mut commands: Commands,
     mut query: Query<(&mut Transform, &ScaleEasingEffect)>,
 ) {
-    if let Ok((mut transform, popout)) = query.get_mut(trigger.target()) {
+    if let Ok((mut transform, popout)) = query.get_mut(trigger.entity) {
         transform.scale = popout.orig_scale().unwrap_or(Vec3::splat(1.));
     }
-    commands.entity(trigger.target()).remove::<ScaleEasingEffect>();
+    commands.entity(trigger.entity).remove::<ScaleEasingEffect>();
 }

@@ -1,11 +1,10 @@
-
+use crate::DummyState;
 use bevy::app::{App, Update};
 use bevy::math::Vec3;
 use bevy::prelude::{
-    in_state, Commands, Component, Curve, Deref, DerefMut, EaseFunction, EasingCurve, Entity, Event, EventWriter,
-    IntoScheduleConfigs, Plugin, Query, Res, States, Time, Transform,
+    in_state, Commands, Component, Curve, Deref, DerefMut, EaseFunction, EasingCurve, Entity, EntityEvent
+    , IntoScheduleConfigs, Plugin, Query, Res, States, Time, Transform,
 };
-use crate::DummyState;
 
 pub struct TranslationEasingPlugin<T>
 where
@@ -32,8 +31,6 @@ where
     T: States,
 {
     fn build(&self, app: &mut App) {
-        app.add_event::<TranslationEasingEnded>();
-
         if let Some(states) = &self.states {
             for state in states {
                 app.add_systems(Update, easing.run_if(in_state(state.clone())));
@@ -52,7 +49,7 @@ impl TranslationEasingPluginAnyState {
     }
 }
 
-#[derive(Event, Deref, DerefMut)]
+#[derive(EntityEvent, Deref, DerefMut)]
 pub struct TranslationEasingEnded(pub Entity);
 
 #[derive(Component, Default)]
@@ -100,7 +97,6 @@ impl TranslationEasingEffect {
 fn easing(
     mut commands: Commands,
     mut query: Query<(&mut Transform, &mut TranslationEasingEffect, Entity)>,
-    mut event: EventWriter<TranslationEasingEnded>,
     time: Res<Time>,
 ) {
     let delta = time.delta().as_millis();
@@ -125,8 +121,7 @@ fn easing(
         }
 
         if percent >= 1. {
-            event.write(TranslationEasingEnded(entity));
-            commands.trigger_targets(TranslationEasingEnded(entity), entity);
+            commands.trigger(TranslationEasingEnded(entity));
         }
     }
 }

@@ -1,11 +1,10 @@
-
+use crate::DummyState;
 use bevy::app::{App, Update};
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default, in_state, Commands, Component, Curve, Deref, DerefMut, EaseFunction, EasingCurve, Entity, Event,
+    default, in_state, Commands, Component, Curve, EaseFunction, EasingCurve, Entity, Event,
     IntoScheduleConfigs, Plugin, Query, Res, States, Time, Transform,
 };
-use crate::DummyState;
 
 pub struct ScaleEasingPlugin<T>
 where
@@ -31,8 +30,6 @@ where
     T: States,
 {
     fn build(&self, app: &mut App) {
-        app.add_event::<ScaleEasingEnded>();
-
         if let Some(states) = &self.states {
             for state in states {
                 app.add_systems(Update, easing.run_if(in_state(state.clone())));
@@ -51,8 +48,11 @@ impl ScaleEasingPluginAnyState {
     }
 }
 
-#[derive(Event, Deref, DerefMut)]
-pub struct ScaleEasingEnded(pub EaseFunction);
+#[derive(Event)]
+pub struct ScaleEasingEnded {
+    pub entity: Entity,
+    pub ease_function: EaseFunction,
+}
 
 #[derive(Component, Default)]
 pub struct ScaleEasingEffect {
@@ -128,7 +128,10 @@ fn easing(mut commands: Commands, mut query: Query<(&mut Transform, &mut ScaleEa
         }
 
         if percent >= 1. {
-            commands.trigger_targets(ScaleEasingEnded(easing.function.unwrap()), entity);
+            commands.trigger(ScaleEasingEnded {
+                entity,
+                ease_function: easing.function.unwrap(),
+            });
             if easing.repeat {
                 easing.reset();
             }
