@@ -21,7 +21,7 @@ ron = { version = "0.11", optional = true }
 thiserror = { version = "2.0", optional = true }
 
 [dev-dependencies]
-bevy = { version = "0.17.0-rc" }
+bevy = { version = "0.17" }
 
 [features]
 default = ["save", "setting"]
