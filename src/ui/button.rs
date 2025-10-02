@@ -1,9 +1,5 @@
 use bevy::app::App;
-use bevy::math::Vec3;
-use bevy::prelude::{
-    Changed, Color, Component, ImageNode, Interaction, IntoScheduleConfigs, Luminance, Plugin, Query, Text, Transform,
-    Update,
-};
+use bevy::prelude::{px, Changed, Color, Component, ImageNode, Interaction, IntoScheduleConfigs, Luminance, Plugin, Query, Text, UiTransform, Update, Val2, Vec2};
 use bevy::ui::BackgroundColor;
 
 pub struct GameButtonPlugin;
@@ -18,22 +14,22 @@ impl Plugin for GameButtonPlugin {
 }
 
 #[derive(Component)]
-#[require(Interaction, Transform)]
+#[require(Interaction, UiTransform)]
 pub struct ButtonTransformEffect {
-    pub scale: Vec3,
-    pub translation: Vec3,
-    orig_scale: Vec3,
-    orig_translation: Vec3,
+    pub scale: Vec2,
+    pub translation: Val2,
+    orig_scale: Vec2,
+    orig_translation: Val2,
     in_effect: bool,
 }
 
 impl Default for ButtonTransformEffect {
     fn default() -> Self {
         Self {
-            scale: Vec3::new(0.9, 0.9, 1.),
-            translation: Vec3::new(0., -5., 0.),
-            orig_scale: Vec3::new(1., 1., 1.),
-            orig_translation: Vec3::default(),
+            scale: Vec2::new(0.9, 0.9),
+            translation: Val2::new(px(0.), px(-5.), ),
+            orig_scale: Vec2::new(1., 1.),
+            orig_translation: Val2::default(),
             in_effect: false,
         }
     }
@@ -90,14 +86,15 @@ impl Default for ButtonToggleEffect {
 }
 
 fn btn_transform_effect(
-    mut query: Query<(&mut Transform, &mut ButtonTransformEffect, &Interaction), Changed<Interaction>>,
+    mut query: Query<(&mut UiTransform, &mut ButtonTransformEffect, &Interaction), Changed<Interaction>>,
 ) {
     for (mut transform, mut effect, interaction) in query.iter_mut() {
         match interaction {
             Interaction::Pressed => {
                 effect.in_effect = true;
                 transform.scale = effect.orig_scale * effect.scale;
-                transform.translation = effect.orig_translation + effect.translation;
+                // TODO: Make translation change
+                // transform.translation = effect.orig_translation + effect.translation;
             }
             Interaction::Hovered => {
                 effect.in_effect = true;
