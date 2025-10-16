@@ -2,8 +2,8 @@ use crate::DummyState;
 use bevy::app::{App, Update};
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default, in_state, Commands, Component, Curve, EaseFunction, EasingCurve, Entity, EntityEvent,
-    IntoScheduleConfigs, Plugin, Query, Res, States, Time, Transform,
+    default, in_state, Commands, Component, Curve, EaseFunction, EasingCurve, Entity, EntityEvent, IntoScheduleConfigs,
+    Plugin, Query, Res, States, Time, Transform, UiTransform, Vec2, Vec3Swizzles,
 };
 
 pub struct ScaleEasingPlugin<T>
@@ -105,17 +105,34 @@ impl ScaleEasingEffect {
     }
 }
 
-fn easing(mut commands: Commands, mut query: Query<(&mut Transform, &mut ScaleEasingEffect, Entity)>, time: Res<Time>) {
+fn easing(
+    mut commands: Commands,
+    mut query: Query<(
+        Option<&mut Transform>,
+        Option<&mut UiTransform>,
+        &mut ScaleEasingEffect,
+        Entity,
+    )>,
+    time: Res<Time>,
+) {
     let delta = time.delta().as_millis();
-    for (mut transform, mut easing, entity) in query.iter_mut() {
+    for (transform, ui_transform, mut easing, entity) in query.iter_mut() {
         if easing.elapsed > easing.duration_ms || easing.function.is_none() {
             continue;
         }
 
         let f = EasingCurve::new(0.0, 1.0, easing.function.unwrap());
-        if easing.scale_orig.is_none() {
-            easing.scale_orig = Some(transform.scale);
+
+        if let Some(ui_transform) = ui_transform.as_ref() {
+            if easing.scale_orig.is_none() {
+                easing.scale_orig = Some(Vec3::from((ui_transform.scale, 0.)));
+            }
+        } else if let Some(transform) = transform.as_ref() {
+            if easing.scale_orig.is_none() {
+                easing.scale_orig = Some(transform.scale);
+            }
         }
+
         if easing.scale_start.is_none() {
             easing.scale_start = easing.scale_orig;
         }
@@ -124,7 +141,12 @@ fn easing(mut commands: Commands, mut query: Query<(&mut Transform, &mut ScaleEa
         let percent = easing.elapsed as f32 / easing.duration_ms as f32;
         let rate = f.sample(percent).unwrap_or(1.);
         if let Some(start_scale) = easing.scale_start {
-            transform.scale = start_scale + easing.scale_gap * Vec3::splat(rate);
+            if let Some(mut ui_transform) = ui_transform {
+                ui_transform.scale = start_scale.xy() + easing.scale_gap.xy() * Vec2::splat(rate);
+            }
+            if let Some(mut transform) = transform {
+                transform.scale = start_scale + easing.scale_gap * Vec3::splat(rate);
+            }
         }
 
         if percent >= 1. {
