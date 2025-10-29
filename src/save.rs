@@ -1,19 +1,49 @@
+use crate::setting::{
+    GameSetting,
+    GameSettingSupportPlugin,
+};
 use bevy::app::App;
 #[cfg(feature = "log")]
-use bevy::prelude::warn;
-use bevy::prelude::{on_message, IntoScheduleConfigs, Message, Plugin, Res, ResMut, Resource, Startup, Update};
+use bevy::prelude::{
+    error,
+    warn,
+};
+use bevy::prelude::{
+    on_message,
+    Deref,
+    DerefMut,
+    IntoScheduleConfigs,
+    Message,
+    MessageReader,
+    Plugin,
+    Res,
+    ResMut,
+    Resource,
+    Update,
+};
 use bevy::tasks::IoTaskPool;
-use serde::{Deserialize, Serialize};
-use simple_crypt::{decrypt, encrypt};
+use serde::{
+    Deserialize,
+    Serialize,
+};
+use simple_crypt::{
+    decrypt,
+    encrypt,
+};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{
+    Path,
+    PathBuf,
+};
 
+#[derive(Default)]
 pub struct EncryptSavePlugin<T>
 where
     T: Resource + Default + EncryptSave + Clone,
 {
-    config: T,
+    _config: Option<T>,
 }
 
 impl<T> Plugin for EncryptSavePlugin<T>
@@ -21,81 +51,92 @@ where
     T: Resource + Default + EncryptSave + Clone,
 {
     fn build(&self, app: &mut App) {
-        app.insert_resource(self.config.clone())
-            .add_message::<SaveEncrypt>()
-            .add_systems(Startup, load::<T>)
-            .add_systems(Update, save::<T>.run_if(on_message::<SaveEncrypt>));
+        app.add_plugins(GameSettingSupportPlugin::<SaveConfig>::default())
+            .insert_resource(T::default())
+            .insert_resource(CurrentSave(0))
+            .add_message::<SaveGame>()
+            .add_systems(Update, load::<T>.run_if(on_message::<LoadGame>))
+            .add_systems(Update, save::<T>.run_if(on_message::<SaveGame>));
     }
 }
 
-impl<T> EncryptSavePlugin<T>
-where
-    T: Resource + Default + EncryptSave + Clone,
-{
-    pub fn new(config: T) -> Self {
-        Self { config }
-    }
+#[derive(Message, Deref, DerefMut)]
+pub struct SaveGame(pub bool); // new or overwrite
+
+#[derive(Message, Deref, DerefMut)]
+pub struct LoadGame(pub u32);
+
+#[derive(Resource, Deref, DerefMut)]
+pub struct CurrentSave(pub u32);
+
+#[derive(Resource, Deserialize, Serialize, Clone, Default)]
+pub struct SaveConfig {
+    saves: HashMap<u32, PathBuf>,
+    save_dir: PathBuf,
 }
 
-#[derive(Message)]
-pub struct SaveEncrypt;
+impl GameSetting for SaveConfig {
+    const DEFAULT_CONF: &'static str = "save_setting.conf";
+}
 
-fn load<T>(mut data: ResMut<T>)
-where
+fn load<T>(
+    mut data: ResMut<T>,
+    mut load_message: MessageReader<LoadGame>,
+    mut current_save: ResMut<CurrentSave>,
+    save_config: Res<SaveConfig>,
+) where
     T: Resource + EncryptSave,
 {
-    if let Err(_e) = data.load() {
-        #[cfg(feature = "log")]
-        warn!(
-            "Failed to load save data {}: {}",
-            T::save_path().as_path().to_str().unwrap_or_default(),
-            _e
-        );
+    for id in load_message.read() {
+        if let Some(saved_path) = save_config.saves.get(&id.0) {
+            let saved_path = save_config.save_dir.join(saved_path);
+            if let Err(_e) = data.load_from(&saved_path) {
+                #[cfg(feature = "log")]
+                warn!("Failed to load save data {}: {}", saved_path.display(), _e);
+            } else {
+                current_save.0 = id.0;
+            }
+        }
     }
 }
 
-fn save<T>(data: Res<T>)
-where
+fn save<T>(
+    data: Res<T>,
+    mut save_message: MessageReader<SaveGame>,
+    current_save: Res<CurrentSave>,
+    save_config: Res<SaveConfig>,
+) where
     T: Resource + EncryptSave,
 {
-    if let Err(_e) = data.save() {
-        #[cfg(feature = "log")]
-        warn!(
-            "Failed to save data {}: {}",
-            T::save_path().as_path().to_str().unwrap_or_default(),
-            _e
-        );
+    for save in save_message.read() {
+        let new_save = save.0;
+        if new_save {
+            let file_name = format!("{}.dat", random_string());
+            let saved_path = save_config.save_dir.join(file_name.as_str());
+            if let Err(_e) = data.save_to(saved_path.clone()) {
+                #[cfg(feature = "log")]
+                error!("Failed to save data {}: {}", saved_path.display(), _e);
+            }
+        } else {
+            if let Some(saved_path) = save_config.saves.get(&current_save.0) {
+                let saved_path = save_config.save_dir.join(saved_path);
+                if let Err(_e) = data.save_to(saved_path.clone()) {
+                    #[cfg(feature = "log")]
+                    error!("Failed to save data {}: {}", saved_path.display(), _e);
+                }
+            }
+        }
     }
 }
 
 pub trait EncryptSave: Serialize + for<'de> Deserialize<'de> {
-    const DEFAULT_SAVE: &'static str = "default_save.dat";
     const ENCR_KEY: &'static str = "0123456789abcdef";
 
-    fn save_path() -> PathBuf {
-        if cfg!(target_os = "android") {
-            // It should be /data/data/com.yourapp.package/default_save.dat
-            PathBuf::from(Self::DEFAULT_SAVE)
-        } else if let Some(data_local_dir) = dirs::data_local_dir() {
-            data_local_dir.join(Self::DEFAULT_SAVE)
-        } else {
-            PathBuf::from(Self::DEFAULT_SAVE)
-        }
-    }
-
-    fn load(&mut self) -> anyhow::Result<()> {
-        self.load_from(&Self::save_path())
-    }
-
-    fn load_from(&mut self, config_path: &PathBuf) -> anyhow::Result<()> {
+    fn load_from(&mut self, config_path: &Path) -> anyhow::Result<()> {
         let enc_saved = std::fs::read(config_path)?;
         let decrypted = decrypt(enc_saved.as_slice(), Self::ENCR_KEY.as_bytes())?;
         (*self, _) = bincode::serde::decode_from_slice(decrypted.as_slice(), bincode::config::legacy())?;
         Ok(())
-    }
-
-    fn save(&self) -> anyhow::Result<()> {
-        self.save_to(Self::save_path())
     }
 
     fn save_to(&self, saved_path: PathBuf) -> anyhow::Result<()> {
@@ -114,4 +155,16 @@ pub trait EncryptSave: Serialize + for<'de> Deserialize<'de> {
 
         Ok(())
     }
+}
+
+fn random_string() -> String {
+    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const LEN: usize = 12;
+
+    (0..LEN)
+        .map(|_| {
+            let idx = fastrand::usize(..CHARSET.len());
+            CHARSET[idx] as char
+        })
+        .collect()
 }

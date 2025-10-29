@@ -1,22 +1,38 @@
 use bevy::app::App;
 use bevy::asset::ron::de::from_reader;
-use bevy::asset::ron::ser::{to_string_pretty, PrettyConfig};
+use bevy::asset::ron::ser::{
+    to_string_pretty,
+    PrettyConfig,
+};
 #[cfg(feature = "log")]
 use bevy::prelude::warn;
 use bevy::prelude::{
-    on_message, IntoScheduleConfigs, Message, MessageWriter, Plugin, Res, ResMut, Resource, Startup, Update,
+    on_message,
+    IntoScheduleConfigs,
+    Message,
+    MessageWriter,
+    Plugin,
+    Res,
+    ResMut,
+    Resource,
+    Startup,
+    Update,
 };
 use bevy::tasks::IoTaskPool;
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 
+#[derive(Default)]
 pub struct GameSettingSupportPlugin<T>
 where
     T: Resource + Default + GameSetting + Clone,
 {
-    config: T,
+    _config: Option<T>,
 }
 
 impl<T> Plugin for GameSettingSupportPlugin<T>
@@ -24,20 +40,11 @@ where
     T: Resource + Default + GameSetting + Clone,
 {
     fn build(&self, app: &mut App) {
-        app.insert_resource(self.config.clone())
+        app.insert_resource(T::default())
             .add_message::<GameSettingChanged>()
             .add_message::<GameSettingLoaded>()
             .add_systems(Startup, load_config::<T>)
             .add_systems(Update, save_config::<T>.run_if(on_message::<GameSettingChanged>));
-    }
-}
-
-impl<T> GameSettingSupportPlugin<T>
-where
-    T: Resource + Default + GameSetting + Clone,
-{
-    pub fn new(config: T) -> Self {
-        Self { config }
     }
 }
 
