@@ -1,5 +1,6 @@
 use crate::setting::{
     GameSetting,
+    GameSettingChanged,
     GameSettingSupportPlugin,
 };
 use bevy::app::App;
@@ -15,6 +16,7 @@ use bevy::prelude::{
     IntoScheduleConfigs,
     Message,
     MessageReader,
+    MessageWriter,
     Plugin,
     Res,
     ResMut,
@@ -103,8 +105,9 @@ fn load<T>(
 fn save<T>(
     data: Res<T>,
     mut save_message: MessageReader<SaveGame>,
-    current_save: Res<CurrentSave>,
-    save_config: Res<SaveConfig>,
+    mut current_save: ResMut<CurrentSave>,
+    mut save_config: ResMut<SaveConfig>,
+    mut setting_changed: MessageWriter<GameSettingChanged>,
 ) where
     T: Resource + EncryptSave,
 {
@@ -116,6 +119,11 @@ fn save<T>(
             if let Err(_e) = data.save_to(saved_path.clone()) {
                 #[cfg(feature = "log")]
                 error!("Failed to save data {}: {}", saved_path.display(), _e);
+            } else {
+                let new_key = if let Some(max_key) = save_config.saves.keys().max() { max_key + 1 } else { 0 };
+                save_config.saves.insert(new_key, PathBuf::from(file_name));
+                current_save.0 = new_key;
+                setting_changed.write(GameSettingChanged);
             }
         } else {
             if let Some(saved_path) = save_config.saves.get(&current_save.0) {
