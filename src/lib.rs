@@ -5,10 +5,6 @@ use bevy::prelude::{Commands, Component, Entity, Query, States, Visibility, With
 
 pub mod color;
 pub mod easing;
-#[cfg(feature = "save")]
-pub mod save;
-#[cfg(feature = "setting")]
-pub mod setting;
 pub mod transform;
 pub mod ui;
 #[cfg(feature = "ron_loader")]
