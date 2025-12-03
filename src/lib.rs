@@ -9,6 +9,8 @@ pub mod transform;
 pub mod ui;
 #[cfg(feature = "ron_loader")]
 pub mod ron_asset_loader;
+#[cfg(feature = "bincode_loader")]
+pub mod bincode_asset_loader;
 pub mod camera;
 
 #[derive(States, Clone, Eq, PartialEq, Debug, Hash)]
