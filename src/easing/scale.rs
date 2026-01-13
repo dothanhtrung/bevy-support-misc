@@ -1,9 +1,29 @@
 use crate::DummyState;
-use bevy::app::{App, Update};
+use bevy::app::{
+    App,
+    Update,
+};
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default, in_state, Commands, Component, Curve, EaseFunction, EasingCurve, Entity, EntityEvent, IntoScheduleConfigs,
-    Plugin, Query, Res, States, Time, Transform, UiTransform, Vec2, Vec3Swizzles,
+    default,
+    in_state,
+    Commands,
+    Component,
+    Curve,
+    EaseFunction,
+    EasingCurve,
+    Entity,
+    EntityEvent,
+    IntoScheduleConfigs,
+    Plugin,
+    Query,
+    Res,
+    States,
+    Time,
+    Transform,
+    UiTransform,
+    Vec2,
+    Vec3Swizzles,
 };
 
 pub struct ScaleEasingPlugin<T>

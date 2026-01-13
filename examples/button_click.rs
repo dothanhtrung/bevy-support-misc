@@ -1,6 +1,13 @@
-use bevy::color::palettes::tailwind::{GREEN_400, GREEN_800};
+use bevy::color::palettes::tailwind::{
+    GREEN_400,
+    GREEN_800,
+};
 use bevy::prelude::*;
-use bevy_support_misc::ui::button::{ButtonColorEffect, ButtonToggleEffect, ButtonTransformEffect};
+use bevy_support_misc::ui::button::{
+    ButtonColorEffect,
+    ButtonToggleEffect,
+    ButtonTransformEffect,
+};
 use bevy_support_misc::ui::UiSupportPlugin;
 
 fn main() {

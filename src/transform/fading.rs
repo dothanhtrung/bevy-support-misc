@@ -1,5 +1,20 @@
-use bevy::app::{App, Plugin, Update};
-use bevy::prelude::{Alpha, Commands, Component, Entity, Query, Res, Sprite, Time, Timer, Visibility};
+use bevy::app::{
+    App,
+    Plugin,
+    Update,
+};
+use bevy::prelude::{
+    Alpha,
+    Commands,
+    Component,
+    Entity,
+    Query,
+    Res,
+    Sprite,
+    Time,
+    Timer,
+    Visibility,
+};
 use bevy::text::TextColor;
 use bevy::ui::BackgroundColor;
 

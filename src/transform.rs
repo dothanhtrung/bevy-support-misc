@@ -1,7 +1,10 @@
 pub mod fading;
 
 use crate::transform::fading::FadingSupportPlugin;
-use bevy::prelude::{App, Plugin};
+use bevy::prelude::{
+    App,
+    Plugin,
+};
 
 pub struct TransformSupportPlugin;
 

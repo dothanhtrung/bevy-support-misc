@@ -1,17 +1,25 @@
 //! ### Plugin
 //! doc goes here
 
-use bevy::prelude::{Commands, Component, Entity, Query, States, Visibility, With};
+use bevy::prelude::{
+    Commands,
+    Component,
+    Entity,
+    Query,
+    States,
+    Visibility,
+    With,
+};
 
-pub mod color;
-pub mod easing;
-pub mod transform;
-pub mod ui;
-#[cfg(feature = "ron_loader")]
-pub mod ron_asset_loader;
 #[cfg(feature = "bincode_loader")]
 pub mod bincode_asset_loader;
 pub mod camera;
+pub mod color;
+pub mod easing;
+#[cfg(feature = "ron_loader")]
+pub mod ron_asset_loader;
+pub mod transform;
+pub mod ui;
 
 #[derive(States, Clone, Eq, PartialEq, Debug, Hash)]
 pub struct DummyState {}

@@ -1,6 +1,6 @@
 [package]
 name = "bevy_support_misc"
-version = "0.7.0"
+version = "0.7.1"
 authors = ["Trung Do <dothanhtrung@pm.me>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -11,18 +11,18 @@ exclude = ["assets", "examples", "tests", ".cargo"]
 categories = ["game-development"]
 
 [dependencies]
-bevy = { version = "0.17", features = ["bevy_ui", "bevy_color", "bevy_text", "bevy_state"], default-features = false }
+bevy = { version = ">=0.17", features = ["bevy_ui", "bevy_color", "bevy_text", "bevy_state"], default-features = false }
 ron = { version = "0.12", optional = true }
 thiserror = { version = "2.0", optional = true }
 serde = { version = "1.0", optional = true }
-bincode = { version = "2.0", features = ["serde"], optional = true }
+postcard = { version = "1.1" , features = ["alloc"], optional = true }
 
 [dev-dependencies]
-bevy = { version = "0.17" }
+bevy = { version = ">=0.17" }
 
 [features]
 default = []
 3d = []
 log = ["bevy/bevy_log"]
 ron_loader = ["ron", "thiserror", "serde"]
-bincode_loader = ["bincode", "thiserror", "serde"]
+bincode_loader = ["postcard", "thiserror", "serde"]

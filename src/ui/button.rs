@@ -1,5 +1,21 @@
 use bevy::app::App;
-use bevy::prelude::{px, Changed, Color, Component, ImageNode, Interaction, IntoScheduleConfigs, Luminance, Plugin, Query, Text, UiTransform, Update, Val2, Vec2};
+use bevy::prelude::{
+    px,
+    Changed,
+    Color,
+    Component,
+    ImageNode,
+    Interaction,
+    IntoScheduleConfigs,
+    Luminance,
+    Plugin,
+    Query,
+    Text,
+    UiTransform,
+    Update,
+    Val2,
+    Vec2,
+};
 use bevy::ui::BackgroundColor;
 
 pub struct GameButtonPlugin;
@@ -27,7 +43,7 @@ impl Default for ButtonTransformEffect {
     fn default() -> Self {
         Self {
             scale: Vec2::new(0.9, 0.9),
-            translation: Val2::new(px(0.), px(-5.), ),
+            translation: Val2::new(px(0.), px(-5.)),
             orig_scale: Vec2::new(1., 1.),
             orig_translation: Val2::default(),
             in_effect: false,

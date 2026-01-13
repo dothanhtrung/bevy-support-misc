@@ -1,9 +1,27 @@
 use crate::DummyState;
-use bevy::app::{App, Update};
+use bevy::app::{
+    App,
+    Update,
+};
 use bevy::math::Vec3;
 use bevy::prelude::{
-    in_state, Commands, Component, Curve, Deref, DerefMut, EaseFunction, EasingCurve, Entity, EntityEvent
-    , IntoScheduleConfigs, Plugin, Query, Res, States, Time, Transform,
+    in_state,
+    Commands,
+    Component,
+    Curve,
+    Deref,
+    DerefMut,
+    EaseFunction,
+    EasingCurve,
+    Entity,
+    EntityEvent,
+    IntoScheduleConfigs,
+    Plugin,
+    Query,
+    Res,
+    States,
+    Time,
+    Transform,
 };
 
 pub struct TranslationEasingPlugin<T>

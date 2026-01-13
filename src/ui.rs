@@ -3,8 +3,17 @@ pub mod button;
 use crate::ui::button::GameButtonPlugin;
 use bevy::prelude::With;
 use bevy::{
-    app::{App, Plugin, Update},
-    prelude::{Component, Query, Text2d, Transform},
+    app::{
+        App,
+        Plugin,
+        Update,
+    },
+    prelude::{
+        Component,
+        Query,
+        Text2d,
+        Transform,
+    },
 };
 
 pub struct UiSupportPlugin;

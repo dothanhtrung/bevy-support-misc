@@ -1,26 +1,41 @@
 use bevy::app::App;
 use bevy::asset::io::Reader;
-use bevy::asset::{AssetLoader, LoadContext};
-use bevy::prelude::{Asset, AssetApp, Plugin, TypePath};
+use bevy::asset::{
+    AssetLoader,
+    LoadContext,
+};
+use bevy::prelude::{
+    Asset,
+    AssetApp,
+    Plugin,
+    TypePath,
+};
 use serde::Deserialize;
 use thiserror::Error;
 
 pub struct RonLoaderPlugin<T>
 where
-    T: Asset + TypePath + Deserialize;
+    T: Asset + TypePath + for<'de> Deserialize<'de>,
+{
+    _unused: Option<T>,
+}
 
 impl<T> Plugin for RonLoaderPlugin<T>
 where
-    T: Asset + TypePath + Deserialize,
+    T: Asset + TypePath + Default + for<'de> Deserialize<'de>,
 {
     fn build(&self, app: &mut App) {
         app.init_asset::<T>().init_asset_loader::<RonAssetLoader<T>>();
     }
 }
 
+#[derive(TypePath, Default)]
 struct RonAssetLoader<T>
 where
-    T: Asset + TypePath + Deserialize;
+    T: Asset + TypePath + for<'de> Deserialize<'de>,
+{
+    _unused: Option<T>,
+}
 
 #[derive(Debug, Error)]
 enum RonAssetLoaderError {
@@ -34,7 +49,7 @@ enum RonAssetLoaderError {
 
 impl<T> AssetLoader for RonAssetLoader<T>
 where
-    T: Asset + TypePath + Deserialize,
+    T: Asset + TypePath + for<'de> Deserialize<'de>,
 {
     type Asset = T;
     type Settings = ();

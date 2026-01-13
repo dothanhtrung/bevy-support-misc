@@ -1,4 +1,8 @@
-use bevy::prelude::{Color, Deref, DerefMut};
+use bevy::prelude::{
+    Color,
+    Deref,
+    DerefMut,
+};
 
 #[derive(Deref, DerefMut, Default)]
 pub struct HexColor(pub u32);
