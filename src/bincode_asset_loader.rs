@@ -13,6 +13,7 @@ use bevy::prelude::{
 use serde::Deserialize;
 use thiserror::Error;
 
+#[derive(Default)]
 pub struct BincodeLoaderPlugin<T>
 where
     T: Asset,
