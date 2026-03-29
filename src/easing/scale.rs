@@ -54,7 +54,7 @@ pub struct ScaleEasingEnded {
     pub ease_function: EaseFunction,
 }
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Clone)]
 pub struct ScaleEasingEffect {
     pub scale_gap: Vec3,
     pub scale_orig: Option<Vec3>,
