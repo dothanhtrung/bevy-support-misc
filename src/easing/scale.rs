@@ -1,29 +1,9 @@
 use crate::DummyState;
-use bevy::app::{
-    App,
-    Update,
-};
+use bevy::app::{App, Update};
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default,
-    in_state,
-    Commands,
-    Component,
-    Curve,
-    EaseFunction,
-    EasingCurve,
-    Entity,
-    EntityEvent,
-    IntoScheduleConfigs,
-    Plugin,
-    Query,
-    Res,
-    States,
-    Time,
-    Transform,
-    UiTransform,
-    Vec2,
-    Vec3Swizzles,
+    default, in_state, Commands, Component, Curve, EaseFunction, EasingCurve, Entity, EntityEvent, IntoScheduleConfigs,
+    Plugin, Query, Res, States, Time, Transform, UiTransform, Vec2, Vec3Swizzles,
 };
 
 pub struct ScaleEasingPlugin<T>
@@ -83,6 +63,7 @@ pub struct ScaleEasingEffect {
     elapsed: u128,
     pub function: Option<EaseFunction>,
     pub repeat: bool,
+    pub pause: bool,
 }
 
 impl ScaleEasingEffect {
@@ -120,8 +101,20 @@ impl ScaleEasingEffect {
         self
     }
 
+    pub fn on_going(&self) -> bool {
+        self.elapsed > 0 && self.elapsed < self.duration_ms && !self.pause
+    }
+
     pub fn reset(&mut self) {
         self.elapsed = 0;
+    }
+
+    pub fn pause(&mut self) {
+        self.pause = true;
+    }
+
+    pub fn unpause(&mut self) {
+        self.pause = false;
     }
 }
 
@@ -137,7 +130,7 @@ fn easing(
 ) {
     let delta = time.delta().as_millis();
     for (transform, ui_transform, mut easing, entity) in query.iter_mut() {
-        if easing.elapsed > easing.duration_ms || easing.function.is_none() {
+        if easing.pause || easing.elapsed > easing.duration_ms || easing.function.is_none() {
             continue;
         }
 
