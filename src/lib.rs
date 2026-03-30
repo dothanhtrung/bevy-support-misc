@@ -5,6 +5,7 @@ use bevy::prelude::{
     Commands,
     Component,
     Entity,
+    Message,
     Query,
     States,
     Visibility,
@@ -23,6 +24,16 @@ pub mod ui;
 
 #[derive(States, Clone, Eq, PartialEq, Debug, Hash)]
 pub struct DummyState {}
+
+#[derive(Message)]
+pub struct ShowUi<T>
+where
+    T: Component;
+
+#[derive(Message)]
+pub struct HideUi<T>
+where
+    T: Component;
 
 pub fn show_ui<T>(mut query: Query<&mut Visibility, With<T>>)
 where
