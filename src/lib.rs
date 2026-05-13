@@ -16,6 +16,7 @@ pub mod bincode_asset_loader;
 pub mod camera;
 pub mod color;
 pub mod easing;
+pub mod mini_event;
 #[cfg(feature = "ron_loader")]
 pub mod ron_asset_loader;
 pub mod transform;
