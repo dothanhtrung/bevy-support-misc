@@ -1,41 +1,34 @@
-use std::time::Duration;
-
+use std::{
+    marker::PhantomData,
+    time::Duration,
+};
 use bevy::{
     app::{
         Plugin,
         Update,
     },
     ecs::{
-        component::Component, message::{
-            Message,
-            MessageReader,
-            MessageWriter,
-        }, observer::On, query::With, resource::Resource, schedule::{
-            IntoScheduleConfigs,
-            common_conditions::on_message,
-        }, system::{
+        component::Component,
+        entity::Entity,
+        event::EntityEvent,
+        hierarchy::ChildOf,
+        observer::On,
+        query::With,
+
+        system::{
             Commands,
-            Res,
-            ResMut,
+            Query,
+
             Single,
-        }
+        },
     },
-    prelude::{
-        Deref,
-        DerefMut,
-    },
-    time::{
-        Time,
-        Timer,
-        TimerMode,
-    },
+    state::state::States,
+    time::TimerMode,
 };
 use bevy_auto_timer::{
     AutoTimer,
     AutoTimerFinished,
     AutoTimerPlugin,
-    AutoTimerPluginAnyState,
-    DummyState,
 };
 use bevy_rand::{
     global::GlobalRng,
@@ -44,149 +37,205 @@ use bevy_rand::{
 };
 use rand::RngExt;
 
-pub struct MiniEventSupportPlugin;
+#[derive(Default)]
+pub struct MiniEventSupportPlugin<T>
+where
+    T: States,
+{
+    pub _states: PhantomData<T>,
+}
 
-impl Plugin for MiniEventSupportPlugin {
+impl<T> Plugin for MiniEventSupportPlugin<T>
+where
+    T: States,
+{
     fn build(&self, app: &mut bevy::app::App) {
         if !app.is_plugin_added::<EntropyPlugin<WyRand>>() {
             app.add_plugins(EntropyPlugin::<WyRand>::default());
         }
-        // TODO: Match the gamestate
-        if !app.is_plugin_added::<AutoTimerPlugin<DummyState>>() {
-            app.add_plugins(AutoTimerPluginAnyState::any());
+        if !app.is_plugin_added::<AutoTimerPlugin<T>>() {
+            app.add_plugins(AutoTimerPlugin::<T>::any());
         }
 
-        app.add_message::<MiniEventBegin>()
-            .add_message::<MiniEventEnd>()
-            .insert_resource(MiniEventSetting::default())
-            .insert_resource(NextMiniEventTimer::default())
-            .insert_resource(MiniEventTimer::default())
-            .add_systems(
-                Update,
-                (
-                    tick,
-                    start.run_if(on_message::<StartMiniEvent>),
-                    stop.run_if(on_message::<StopMiniEvent>),
-                    event_end.run_if(on_message::<MiniEventEnd>),
-                    event_start.run_if(on_message::<MiniEventBegin>),
-                    event_extend.run_if(on_message::<MiniEventExtend>),
-                ),
-            );
+        app.add_systems(Update, setup)
+            .add_observer(start)
+            .add_observer(stop)
+            .add_observer(event_extend);
     }
 }
+
+#[derive(Component, Default)]
+struct EventSetup;
 
 #[derive(Component)]
-struct MiniEvent(u64);
-
-#[derive(Message, Deref, DerefMut)]
-pub struct StartMiniEvent(pub u64);
-
-#[derive(Message, Deref, DerefMut)]
-pub struct StopMiniEvent(pub u64);
-
-#[derive(Message)]
-pub struct MiniEventBegin;
-
-#[derive(Message)]
-pub struct MiniEventEnd;
-
-#[derive(Message, Deref, DerefMut)]
-pub struct MiniEventExtend(pub u64);
-
-#[derive(Resource, Default)]
-pub struct MiniEventSetting {
-    pub min_gap: u64,
-    pub max_gap: u64,
+#[require(EventSetup)]
+pub struct MiniEvent {
+    pub min_wait_ms: u64,
+    pub max_wait_ms: u64,
+    pub event_time: Duration,
+    pub is_repeat: bool,
 }
 
-#[derive(Resource, Default, Deref, DerefMut)]
-struct NextMiniEventTimer(Timer);
+#[derive(EntityEvent)]
+pub struct StartMiniEvent {
+    pub entity: Entity,
+}
 
-#[derive(Resource, Default, Deref, DerefMut)]
-struct MiniEventTimer(Timer);
+#[derive(EntityEvent)]
+pub struct StopMiniEvent {
+    pub entity: Entity,
+}
 
-fn tick(
-    time: Res<Time>,
-    mut next_event_timer: ResMut<NextMiniEventTimer>,
-    mut mini_event_timer: ResMut<MiniEventTimer>,
-    mut event_begin: MessageWriter<MiniEventBegin>,
-    mut event_end: MessageWriter<MiniEventEnd>,
-) {
-    let delta = time.delta();
-    if !next_event_timer.is_paused() {
-        next_event_timer.tick(delta);
-    } else if !mini_event_timer.is_paused() {
-        mini_event_timer.tick(delta);
-    }
+#[derive(EntityEvent)]
+pub struct MiniEventBegin {
+    pub entity: Entity,
+}
 
-    if next_event_timer.just_finished() {
-        event_begin.write(MiniEventBegin);
-    } else if mini_event_timer.just_finished() {
-        event_end.write(MiniEventEnd);
+#[derive(EntityEvent)]
+pub struct MiniEventEnd {
+    pub entity: Entity,
+}
+
+#[derive(EntityEvent)]
+pub struct MiniEventExtend {
+    pub entity: Entity,
+    pub duration: Duration,
+}
+
+#[derive(Component, Default)]
+pub struct WaitTimer;
+
+#[derive(Component, Default)]
+pub struct EventTimer;
+
+fn setup(mut commands: Commands, query: Query<(Entity, &MiniEvent), With<EventSetup>>) {
+    for (e, mini_event) in query.iter() {
+        commands.entity(e).with_children(|parent| {
+            let mut wait_timer = AutoTimer::default();
+            wait_timer.timer.pause();
+            parent.spawn((wait_timer, WaitTimer)).observe(event_begin);
+
+            let mut event_timer = AutoTimer::new(mini_event.event_time, TimerMode::Once);
+            event_timer.timer.pause();
+            parent.spawn((event_timer, EventTimer)).observe(event_end);
+        });
+
+        commands.entity(e).remove::<EventSetup>();
     }
 }
 
 fn start(
-    mut commands: Commands,
-    mut messages: MessageReader<StartMiniEvent>,
-    setting: Res<MiniEventSetting>,
+    trigger: On<StartMiniEvent>,
     mut rng: Single<&mut WyRand, With<GlobalRng>>,
+    mini_events: Query<&MiniEvent>,
+    mut query: Query<(&mut AutoTimer, &ChildOf), With<WaitTimer>>,
 ) {
-    for msg in messages.read() {
-        let next_event_ms = if setting.max_gap > setting.min_gap {
-            rng.random_range(setting.min_gap..setting.max_gap)
-        } else if setting.max_gap == setting.min_gap {
-            setting.max_gap
+    if let Ok(mini_event) = mini_events.get(trigger.entity) {
+        let random_ms = if mini_event.max_wait_ms > mini_event.min_wait_ms {
+            rng.random_range(mini_event.min_wait_ms..mini_event.max_wait_ms)
+        } else if mini_event.max_wait_ms == mini_event.min_wait_ms {
+            mini_event.max_wait_ms
         } else {
             0
         };
-        commands
-            .spawn((
-                AutoTimer::from_seconds(Duration::from_millis(next_event_ms).as_secs_f32(), TimerMode::Once),
-                MiniEvent(**msg),
-            ))
-            .observe(event_start);
+        let wait_duration = Duration::from_millis(random_ms);
+        for (mut timer, child_of) in query.iter_mut() {
+            if child_of.parent() == trigger.entity {
+                timer.timer.reset();
+                timer.timer.set_duration(wait_duration);
+                timer.timer.unpause();
+                break;
+            }
+        }
     }
 }
 
-fn stop(mut next_timer: ResMut<NextMiniEventTimer>, mut event_timer: ResMut<MiniEventTimer>) {
-    next_timer.pause();
-    event_timer.pause();
+fn stop(
+    trigger: On<StopMiniEvent>,
+    mut wait_timer_query: Query<(&ChildOf, &mut AutoTimer), With<WaitTimer>>,
+    mut event_timer_query: Query<(&ChildOf, &mut AutoTimer), With<EventTimer>>,
+) {
+    for (child_of, mut wait_timer) in wait_timer_query.iter_mut() {
+        if child_of.parent() == trigger.entity {
+            wait_timer.timer.pause();
+            break;
+        }
+    }
+    for (child_of, mut event_timer) in event_timer_query.iter_mut() {
+        if child_of.parent() == trigger.entity {
+            event_timer.timer.pause();
+            break;
+        }
+    }
+}
+
+fn event_begin(
+    trigger: On<AutoTimerFinished>,
+    mut commands: Commands,
+    mut wait_timer_query: Query<(&ChildOf, &mut AutoTimer), With<WaitTimer>>,
+    mut event_timer_query: Query<(&ChildOf, &mut AutoTimer), With<EventTimer>>,
+) {
+    if let Ok((child_of, mut wait_timer)) = wait_timer_query.get_mut(trigger.entity) {
+        let parent_entity = child_of.parent();
+        commands.trigger(MiniEventBegin { entity: parent_entity });
+        wait_timer.timer.pause();
+
+        for (child_of, mut event_timer) in event_timer_query.iter_mut() {
+            if child_of.parent() == parent_entity {
+                event_timer.timer.reset();
+                event_timer.timer.unpause();
+                break;
+            }
+        }
+    }
 }
 
 fn event_end(
-    mut next_event_timer: ResMut<NextMiniEventTimer>,
-    mut event_timer: ResMut<MiniEventTimer>,
+    trigger: On<AutoTimerFinished>,
+    mut commands: Commands,
+    mut wait_timer_query: Query<(&ChildOf, &mut AutoTimer), With<WaitTimer>>,
+    mut event_timer_query: Query<(&ChildOf, &mut AutoTimer), With<EventTimer>>,
+    event_query: Query<&MiniEvent>,
     mut rng: Single<&mut WyRand, With<GlobalRng>>,
-    setting: Res<MiniEventSetting>,
 ) {
-    let next_event_ms = if setting.max_gap > setting.min_gap {
-        rng.random_range(setting.min_gap..setting.max_gap)
-    } else if setting.max_gap == setting.min_gap {
-        setting.max_gap
-    } else {
-        0
-    };
+    if let Ok((child_of, mut event_timer)) = event_timer_query.get_mut(trigger.entity) {
+        let parent_entity = child_of.parent();
 
-    next_event_timer.set_duration(Duration::from_millis(next_event_ms));
-    next_event_timer.reset();
-    next_event_timer.unpause();
+        commands.trigger(MiniEventEnd { entity: parent_entity });
+        event_timer.timer.pause();
 
-    event_timer.pause();
+        if let Ok(mini_event) = event_query.get(parent_entity) {
+            if !mini_event.is_repeat {
+                return;
+            }
+            for (child_of, mut wait_timer) in wait_timer_query.iter_mut() {
+                if child_of.parent() == parent_entity {
+                    let random_ms = if mini_event.max_wait_ms > mini_event.min_wait_ms {
+                        rng.random_range(mini_event.min_wait_ms..mini_event.max_wait_ms)
+                    } else if mini_event.max_wait_ms == mini_event.min_wait_ms {
+                        mini_event.max_wait_ms
+                    } else {
+                        0
+                    };
+                    wait_timer.timer.reset();
+                    wait_timer.timer.set_duration(Duration::from_millis(random_ms));
+                    wait_timer.timer.unpause();
+                    break;
+                }
+            }
+        }
+    }
 }
 
-fn event_start(
-    _: On<AutoTimerFinished>,
-    mut next_event_timer: ResMut<NextMiniEventTimer>,
-    mut event_timer: ResMut<MiniEventTimer>,
+fn event_extend(
+    trigger: On<MiniEventExtend>,
+    mut event_timer_query: Query<(&ChildOf, &mut AutoTimer), With<EventTimer>>,
 ) {
-    event_timer.reset();
-    event_timer.unpause();
-}
-
-fn event_extend(mut msgs: MessageReader<MiniEventExtend>, mut event_timer: ResMut<MiniEventTimer>) {
-    for msg in msgs.read() {
-        let elapsed = event_timer.elapsed();
-        event_timer.set_elapsed(elapsed - Duration::from_millis(**msg));
+    for (child_of, mut event_timer) in event_timer_query.iter_mut() {
+        if child_of.parent() == trigger.entity {
+            let elapsed = event_timer.timer.elapsed() - trigger.duration;
+            event_timer.timer.set_elapsed(elapsed);
+            break;
+        }
     }
 }
