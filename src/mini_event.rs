@@ -67,7 +67,7 @@ where
 #[derive(Component, Default)]
 struct EventSetup;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 #[require(EventSetup)]
 pub struct MiniEvent {
     pub min_wait_ms: u64,
