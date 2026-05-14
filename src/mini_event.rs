@@ -1,7 +1,4 @@
-use std::{
-    marker::PhantomData,
-    time::Duration,
-};
+use std::time::Duration;
 use bevy::{
     app::{
         Plugin,
@@ -13,7 +10,10 @@ use bevy::{
         event::EntityEvent,
         hierarchy::ChildOf,
         observer::On,
-        query::With,
+        query::{
+            With,
+            Without,
+        },
 
         system::{
             Commands,
@@ -42,7 +42,16 @@ pub struct MiniEventSupportPlugin<T>
 where
     T: States,
 {
-    pub _states: PhantomData<T>,
+    pub states: Vec<T>,
+}
+
+impl<T> MiniEventSupportPlugin<T>
+where
+    T: States,
+{
+    pub fn new(states: Vec<T>) -> Self {
+        Self { states }
+    }
 }
 
 impl<T> Plugin for MiniEventSupportPlugin<T>
@@ -152,7 +161,7 @@ fn start(
 
 fn stop(
     trigger: On<StopMiniEvent>,
-    mut wait_timer_query: Query<(&ChildOf, &mut AutoTimer), With<WaitTimer>>,
+    mut wait_timer_query: Query<(&ChildOf, &mut AutoTimer), (With<WaitTimer>, Without<EventTimer>)>,
     mut event_timer_query: Query<(&ChildOf, &mut AutoTimer), With<EventTimer>>,
 ) {
     for (child_of, mut wait_timer) in wait_timer_query.iter_mut() {
@@ -172,7 +181,7 @@ fn stop(
 fn event_begin(
     trigger: On<AutoTimerFinished>,
     mut commands: Commands,
-    mut wait_timer_query: Query<(&ChildOf, &mut AutoTimer), With<WaitTimer>>,
+    mut wait_timer_query: Query<(&ChildOf, &mut AutoTimer), (With<WaitTimer>, Without<EventTimer>)>,
     mut event_timer_query: Query<(&ChildOf, &mut AutoTimer), With<EventTimer>>,
 ) {
     if let Ok((child_of, mut wait_timer)) = wait_timer_query.get_mut(trigger.entity) {
@@ -193,7 +202,7 @@ fn event_begin(
 fn event_end(
     trigger: On<AutoTimerFinished>,
     mut commands: Commands,
-    mut wait_timer_query: Query<(&ChildOf, &mut AutoTimer), With<WaitTimer>>,
+    mut wait_timer_query: Query<(&ChildOf, &mut AutoTimer), (With<WaitTimer>, Without<EventTimer>)>,
     mut event_timer_query: Query<(&ChildOf, &mut AutoTimer), With<EventTimer>>,
     event_query: Query<&MiniEvent>,
     mut rng: Single<&mut WyRand, With<GlobalRng>>,
