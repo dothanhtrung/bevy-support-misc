@@ -6,22 +6,19 @@ use bevy::{
         Update,
     },
     ecs::{
-        message::{
+        component::Component, message::{
             Message,
             MessageReader,
             MessageWriter,
-        },
-        query::With,
-        resource::Resource,
-        schedule::{
+        }, observer::On, query::With, resource::Resource, schedule::{
             IntoScheduleConfigs,
             common_conditions::on_message,
-        },
-        system::{
+        }, system::{
+            Commands,
             Res,
             ResMut,
             Single,
-        },
+        }
     },
     prelude::{
         Deref,
@@ -30,7 +27,15 @@ use bevy::{
     time::{
         Time,
         Timer,
+        TimerMode,
     },
+};
+use bevy_auto_timer::{
+    AutoTimer,
+    AutoTimerFinished,
+    AutoTimerPlugin,
+    AutoTimerPluginAnyState,
+    DummyState,
 };
 use bevy_rand::{
     global::GlobalRng,
@@ -45,6 +50,10 @@ impl Plugin for MiniEventSupportPlugin {
     fn build(&self, app: &mut bevy::app::App) {
         if !app.is_plugin_added::<EntropyPlugin<WyRand>>() {
             app.add_plugins(EntropyPlugin::<WyRand>::default());
+        }
+        // TODO: Match the gamestate
+        if !app.is_plugin_added::<AutoTimerPlugin<DummyState>>() {
+            app.add_plugins(AutoTimerPluginAnyState::any());
         }
 
         app.add_message::<MiniEventBegin>()
@@ -66,11 +75,14 @@ impl Plugin for MiniEventSupportPlugin {
     }
 }
 
-#[derive(Message)]
-pub struct StartMiniEvent;
+#[derive(Component)]
+struct MiniEvent(u64);
 
-#[derive(Message)]
-pub struct StopMiniEvent;
+#[derive(Message, Deref, DerefMut)]
+pub struct StartMiniEvent(pub u64);
+
+#[derive(Message, Deref, DerefMut)]
+pub struct StopMiniEvent(pub u64);
 
 #[derive(Message)]
 pub struct MiniEventBegin;
@@ -114,12 +126,27 @@ fn tick(
     }
 }
 
-fn start(mut next_timer: ResMut<NextMiniEventTimer>, mut event_timer: ResMut<MiniEventTimer>) {
-    next_timer.reset();
-    next_timer.unpause();
-
-    event_timer.reset();
-    event_timer.pause();
+fn start(
+    mut commands: Commands,
+    mut messages: MessageReader<StartMiniEvent>,
+    setting: Res<MiniEventSetting>,
+    mut rng: Single<&mut WyRand, With<GlobalRng>>,
+) {
+    for msg in messages.read() {
+        let next_event_ms = if setting.max_gap > setting.min_gap {
+            rng.random_range(setting.min_gap..setting.max_gap)
+        } else if setting.max_gap == setting.min_gap {
+            setting.max_gap
+        } else {
+            0
+        };
+        commands
+            .spawn((
+                AutoTimer::from_seconds(Duration::from_millis(next_event_ms).as_secs_f32(), TimerMode::Once),
+                MiniEvent(**msg),
+            ))
+            .observe(event_start);
+    }
 }
 
 fn stop(mut next_timer: ResMut<NextMiniEventTimer>, mut event_timer: ResMut<MiniEventTimer>) {
@@ -133,7 +160,14 @@ fn event_end(
     mut rng: Single<&mut WyRand, With<GlobalRng>>,
     setting: Res<MiniEventSetting>,
 ) {
-    let next_event_ms = rng.random_range(setting.min_gap..setting.max_gap);
+    let next_event_ms = if setting.max_gap > setting.min_gap {
+        rng.random_range(setting.min_gap..setting.max_gap)
+    } else if setting.max_gap == setting.min_gap {
+        setting.max_gap
+    } else {
+        0
+    };
+
     next_event_timer.set_duration(Duration::from_millis(next_event_ms));
     next_event_timer.reset();
     next_event_timer.unpause();
@@ -141,11 +175,13 @@ fn event_end(
     event_timer.pause();
 }
 
-fn event_start(mut next_event_timer: ResMut<NextMiniEventTimer>, mut event_timer: ResMut<MiniEventTimer>) {
+fn event_start(
+    _: On<AutoTimerFinished>,
+    mut next_event_timer: ResMut<NextMiniEventTimer>,
+    mut event_timer: ResMut<MiniEventTimer>,
+) {
     event_timer.reset();
     event_timer.unpause();
-
-    next_event_timer.pause();
 }
 
 fn event_extend(mut msgs: MessageReader<MiniEventExtend>, mut event_timer: ResMut<MiniEventTimer>) {
