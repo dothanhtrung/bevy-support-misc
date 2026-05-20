@@ -44,7 +44,7 @@ enum BincodeAssetLoaderError {
     #[error("Could not load asset: {0}")]
     Io(#[from] std::io::Error),
     /// A [RON](ron) Error
-    #[error("Could not parse RON: {0}")]
+    #[error("Could not parse blob: {0}")]
     DecodeError(#[from] postcard::Error),
 }
 
@@ -69,6 +69,6 @@ where
     }
 
     fn extensions(&self) -> &[&str] {
-        &["custom"]
+        &["bin", "dat"]
     }
 }

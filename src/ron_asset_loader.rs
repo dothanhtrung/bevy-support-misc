@@ -69,6 +69,6 @@ where
     }
 
     fn extensions(&self) -> &[&str] {
-        &["custom"]
+        &["ron"]
     }
 }
