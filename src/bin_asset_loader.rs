@@ -14,24 +14,24 @@ use serde::Deserialize;
 use thiserror::Error;
 
 #[derive(Default)]
-pub struct BincodeLoaderPlugin<T>
+pub struct BinLoaderPlugin<T>
 where
     T: Asset,
 {
     _unused: Option<T>,
 }
 
-impl<T> Plugin for BincodeLoaderPlugin<T>
+impl<T> Plugin for BinLoaderPlugin<T>
 where
     T: Asset + Default + for<'de> Deserialize<'de>,
 {
     fn build(&self, app: &mut App) {
-        app.init_asset::<T>().init_asset_loader::<BincodeAssetLoader<T>>();
+        app.init_asset::<T>().init_asset_loader::<BinAssetLoader<T>>();
     }
 }
 
 #[derive(TypePath, Default)]
-struct BincodeAssetLoader<T>
+struct BinAssetLoader<T>
 where
     T: Asset,
 {
@@ -39,7 +39,7 @@ where
 }
 
 #[derive(Debug, Error)]
-enum BincodeAssetLoaderError {
+enum BinAssetLoaderError {
     /// An [IO](std::io) Error
     #[error("Could not load asset: {0}")]
     Io(#[from] std::io::Error),
@@ -48,13 +48,13 @@ enum BincodeAssetLoaderError {
     DecodeError(#[from] postcard::Error),
 }
 
-impl<T> AssetLoader for BincodeAssetLoader<T>
+impl<T> AssetLoader for BinAssetLoader<T>
 where
     T: Asset + TypePath + for<'de> Deserialize<'de>,
 {
     type Asset = T;
     type Settings = ();
-    type Error = BincodeAssetLoaderError;
+    type Error = BinAssetLoaderError;
 
     async fn load(
         &self,

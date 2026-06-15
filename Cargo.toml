@@ -1,6 +1,6 @@
 [package]
 name = "bevy_support_misc"
-version = "0.7.1"
+version = "0.8.0"
 authors = ["Trung Do <dothanhtrung@pm.me>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -24,9 +24,9 @@ postcard = { version = "1.1" , features = ["alloc"], optional = true }
 bevy = { version = ">=0.17", features = ["dynamic_linking"] }
 
 [features]
-default = ["ron_loader", "bincode_loader", "mini_event"]
+default = ["ron_loader", "bin_loader", "mini_event"]
 3d = []
 log = ["bevy/bevy_log"]
 ron_loader = ["ron", "thiserror", "serde"]
-bincode_loader = ["postcard", "thiserror", "serde"]
+bin_loader = ["postcard", "thiserror", "serde"]
 mini_event = ["bevy_rand", "rand", "bevy_auto_timer"]

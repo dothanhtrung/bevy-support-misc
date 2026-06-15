@@ -11,8 +11,8 @@ use bevy::prelude::{
     With,
 };
 
-#[cfg(feature = "bincode_loader")]
-pub mod bincode_asset_loader;
+#[cfg(feature = "bin_loader")]
+pub mod bin_asset_loader;
 pub mod camera;
 pub mod color;
 pub mod easing;
