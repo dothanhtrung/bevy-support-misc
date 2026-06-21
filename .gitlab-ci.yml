@@ -20,7 +20,7 @@ check:
   script:
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo check --examples
-    - /usr/local/cargo/bin/cargo-sweep sweep -t 60 || true
+    - find . -mtime +30 -print -delete || true
   rules:
     - changes:
         - Cargo.toml
