@@ -36,6 +36,7 @@ where
     T: Asset,
 {
     _unused: Option<T>,
+    encrypt_key: String,
 }
 
 #[derive(Debug, Error)]
@@ -64,6 +65,12 @@ where
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
         reader.read_to_end(&mut bytes).await?;
+
+        if !self.encrypt_key.is_empty() {
+            bytes = simple_crypt::decrypt(bytes.as_slice(), self.encrypt_key.as_bytes())
+                .map_err(|_| BinAssetLoaderError::DecodeError(postcard::Error::SerdeDeCustom))?;
+        };
+
         let custom_asset = postcard::from_bytes(bytes.as_slice())?;
         Ok(custom_asset)
     }
