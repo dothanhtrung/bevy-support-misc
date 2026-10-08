@@ -15,6 +15,7 @@ use bevy::prelude::{
 pub mod bin_asset_loader;
 pub mod camera;
 pub mod color;
+#[cfg(feature = "easing")]
 pub mod easing;
 #[cfg(feature = "mini_event")]
 pub mod mini_event;

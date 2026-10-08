@@ -1,11 +1,12 @@
 use bevy::app::App;
+use bevy::ecs::query::Or;
+use bevy::picking::hover::Hovered;
 use bevy::prelude::{
     px,
     Changed,
     Color,
     Component,
     ImageNode,
-    Interaction,
     IntoScheduleConfigs,
     Luminance,
     Plugin,
@@ -16,7 +17,10 @@ use bevy::prelude::{
     Val2,
     Vec2,
 };
-use bevy::ui::BackgroundColor;
+use bevy::ui::{
+    BackgroundColor,
+    Pressed,
+};
 
 pub struct GameButtonPlugin;
 
@@ -30,7 +34,7 @@ impl Plugin for GameButtonPlugin {
 }
 
 #[derive(Component)]
-#[require(Interaction, UiTransform)]
+#[require(Pressed, Hovered, UiTransform)]
 pub struct ButtonTransformEffect {
     pub scale: Vec2,
     pub translation: Val2,
@@ -52,7 +56,7 @@ impl Default for ButtonTransformEffect {
 }
 
 #[derive(Component)]
-#[require(Interaction, BackgroundColor)]
+#[require(Pressed, Hovered, BackgroundColor)]
 pub struct ButtonColorEffect {
     pub lighter: f32,
     orig_bg_color: Color,
@@ -80,7 +84,7 @@ impl ButtonColorEffect {
 }
 
 #[derive(Component)]
-#[require(BackgroundColor, Text, Interaction)]
+#[require(BackgroundColor, Text, Pressed, Hovered)]
 pub struct ButtonToggleEffect {
     pub on_text: String,
     pub off_text: String,
@@ -102,28 +106,27 @@ impl Default for ButtonToggleEffect {
 }
 
 fn btn_transform_effect(
-    mut query: Query<(&mut UiTransform, &mut ButtonTransformEffect, &Interaction), Changed<Interaction>>,
+    mut query: Query<
+        (&mut UiTransform, &mut ButtonTransformEffect, Option<&Pressed>, &Hovered),
+        Or<(Changed<Hovered>, Changed<Pressed>)>,
+    >,
 ) {
-    for (mut transform, mut effect, interaction) in query.iter_mut() {
-        match interaction {
-            Interaction::Pressed => {
-                effect.in_effect = true;
-                transform.scale = effect.orig_scale * effect.scale;
-                // TODO: Make translation change
-                // transform.translation = effect.orig_translation + effect.translation;
-            }
-            Interaction::Hovered => {
-                effect.in_effect = true;
+    for (mut transform, mut effect, pressed, hovered) in query.iter_mut() {
+        if pressed.is_some() {
+            effect.in_effect = true;
+            transform.scale = effect.orig_scale * effect.scale;
+            // TODO: Make translation change
+            // transform.translation = effect.orig_translation + effect.translation;
+        } else if hovered.0 {
+            effect.in_effect = true;
+            transform.scale = effect.orig_scale;
+        } else {
+            if effect.in_effect {
                 transform.scale = effect.orig_scale;
+                effect.in_effect = false;
             }
-            Interaction::None => {
-                if effect.in_effect {
-                    transform.scale = effect.orig_scale;
-                    effect.in_effect = false;
-                }
-                effect.orig_scale = transform.scale;
-                effect.orig_translation = transform.translation;
-            }
+            effect.orig_scale = transform.scale;
+            effect.orig_translation = transform.translation;
         }
     }
 }
@@ -134,36 +137,32 @@ fn btn_color_effect(
             &mut BackgroundColor,
             Option<&mut ImageNode>,
             &mut ButtonColorEffect,
-            &Interaction,
+            &Hovered,
         ),
-        Changed<Interaction>,
+        Changed<Hovered>,
     >,
 ) {
-    for (mut bg_color, image_node, mut effect, interaction) in query.iter_mut() {
-        match interaction {
-            Interaction::Pressed => {}
-            Interaction::Hovered => {
-                effect.in_effect = true;
-                bg_color.0 = effect.orig_bg_color.lighter(effect.lighter);
-                if let Some(mut node) = image_node {
-                    node.color = node.color.lighter(effect.lighter);
-                }
+    for (mut bg_color, image_node, mut effect, hovered) in query.iter_mut() {
+        if hovered.0 {
+            effect.in_effect = true;
+            bg_color.0 = effect.orig_bg_color.lighter(effect.lighter);
+            if let Some(mut node) = image_node {
+                node.color = node.color.lighter(effect.lighter);
             }
-            Interaction::None => {
-                if effect.in_effect {
-                    bg_color.0 = effect.orig_bg_color;
-                    effect.in_effect = false;
-                }
-                effect.orig_bg_color = bg_color.0;
+        } else {
+            if effect.in_effect {
+                bg_color.0 = effect.orig_bg_color;
+                effect.in_effect = false;
+            }
+            effect.orig_bg_color = bg_color.0;
 
-                if let Some(node) = &image_node {
-                    effect.orig_img_color = node.color;
-                }
-                if effect.in_effect {
-                    if let Some(mut node) = image_node {
-                        node.color = effect.orig_img_color;
-                    }
-                }
+            if let Some(node) = &image_node {
+                effect.orig_img_color = node.color;
+            }
+            if effect.in_effect
+                && let Some(mut node) = image_node
+            {
+                node.color = effect.orig_img_color;
             }
         }
     }
@@ -176,27 +175,23 @@ fn btn_toggle_effect(
             Option<&mut ButtonColorEffect>,
             &mut Text,
             &mut BackgroundColor,
-            &Interaction,
+            Option<&Pressed>,
         ),
-        Changed<Interaction>,
+        Changed<Pressed>,
     >,
 ) {
-    for (mut btn_toggle_effect, btn_color_effect_opt, mut text, mut bg_color, interaction) in query.iter_mut() {
-        match interaction {
-            Interaction::Pressed => {
-                btn_toggle_effect.enabled = !btn_toggle_effect.enabled;
-                (**text, *bg_color) = if btn_toggle_effect.enabled {
-                    (btn_toggle_effect.on_text.clone(), btn_toggle_effect.on_color.into())
-                } else {
-                    (btn_toggle_effect.off_text.clone(), btn_toggle_effect.off_color.into())
-                };
+    for (mut btn_toggle_effect, btn_color_effect_opt, mut text, mut bg_color, pressed) in query.iter_mut() {
+        if pressed.is_some() {
+            btn_toggle_effect.enabled = !btn_toggle_effect.enabled;
+            (**text, *bg_color) = if btn_toggle_effect.enabled {
+                (btn_toggle_effect.on_text.clone(), btn_toggle_effect.on_color.into())
+            } else {
+                (btn_toggle_effect.off_text.clone(), btn_toggle_effect.off_color.into())
+            };
 
-                if let Some(mut btn_color_effect) = btn_color_effect_opt {
-                    btn_color_effect.orig_bg_color = bg_color.0;
-                }
+            if let Some(mut btn_color_effect) = btn_color_effect_opt {
+                btn_color_effect.orig_bg_color = bg_color.0;
             }
-            Interaction::Hovered => {}
-            Interaction::None => {}
         }
     }
 }

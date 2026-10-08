@@ -79,8 +79,10 @@ struct EventSetup;
 #[derive(Component, Default)]
 #[require(EventSetup)]
 pub struct MiniEvent {
+    /// Random wait time before start event
     pub min_wait_ms: u64,
     pub max_wait_ms: u64,
+    /// The event duration
     pub event_time: Duration,
     pub is_repeat: bool,
 }

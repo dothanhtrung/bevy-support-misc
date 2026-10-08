@@ -1,4 +1,5 @@
 use bevy::color::palettes::tailwind::GREEN_400;
+use bevy::ui_widgets::Button;
 use bevy::prelude::*;
 use bevy_support_misc::easing::scale::{
     ScaleEasingEffect,
@@ -33,17 +34,13 @@ fn setup(mut commands: Commands) {
         .observe(hover_out);
 }
 
-fn hover_in(trigger: On<Pointer<Over>>, mut commands: Commands) {
+fn hover_in(trigger: On<PointerOver>, mut commands: Commands) {
     commands
         .entity(trigger.entity)
         .insert(ScaleEasingEffect::popout(Vec3::splat(2.), 1000));
 }
 
-fn hover_out(
-    trigger: On<Pointer<Out>>,
-    mut commands: Commands,
-    mut query: Query<(&mut Transform, &ScaleEasingEffect)>,
-) {
+fn hover_out(trigger: On<PointerOut>, mut commands: Commands, mut query: Query<(&mut Transform, &ScaleEasingEffect)>) {
     if let Ok((mut transform, popout)) = query.get_mut(trigger.entity) {
         transform.scale = popout.orig_scale().unwrap_or(Vec3::splat(1.));
     }

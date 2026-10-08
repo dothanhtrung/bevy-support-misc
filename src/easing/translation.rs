@@ -3,16 +3,18 @@ use bevy::app::{
     App,
     Update,
 };
+use bevy::curve::{
+    EaseFunction,
+    EasingCurve,
+    Curve,
+};
 use bevy::math::Vec3;
 use bevy::prelude::{
     in_state,
     Commands,
     Component,
-    Curve,
     Deref,
     DerefMut,
-    EaseFunction,
-    EasingCurve,
     Entity,
     EntityEvent,
     IntoScheduleConfigs,
