@@ -33,7 +33,7 @@ impl Plugin for GameButtonPlugin {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 #[require(Pressed, Hovered, UiTransform)]
 pub struct ButtonTransformEffect {
     pub scale: Vec2,
@@ -55,7 +55,7 @@ impl Default for ButtonTransformEffect {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 #[require(Pressed, Hovered, BackgroundColor)]
 pub struct ButtonColorEffect {
     pub lighter: f32,
@@ -83,7 +83,7 @@ impl ButtonColorEffect {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 #[require(BackgroundColor, Text, Pressed, Hovered)]
 pub struct ButtonToggleEffect {
     pub on_text: String,
